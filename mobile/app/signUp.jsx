@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, StyleSheet, Alert, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import ScreenWrapper from '../components/ScreenWrapper';
 import { InputField } from '../components/InputField';
 import { FormButton } from '../components/FormButton';
 import { KeyboardAwareView } from '../components/KeyboardAwareView';
-import { hp } from '../helpers/common';
+import { hp, wp } from '../helpers/common';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { theme } from '../constants/theme';
 import { supabase } from '../lib/supabase';
@@ -18,6 +18,12 @@ export default function SignUpScreen() {
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Refs for input fields to handle next field focus
+  const lastNameRef = useRef(null);
+  const phoneRef = useRef(null);
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
 
   const validatePhone = (number) => {
     const phoneRegex = /^\d{10}$/;
@@ -100,18 +106,25 @@ export default function SignUpScreen() {
                 placeholder="Enter your first name"
                 autoCapitalize="words"
                 returnKeyType="next"
+                onSubmitEditing={() => lastNameRef.current?.focus()}
+                blurOnSubmit={false}
                 delay={300}
               />
               <InputField
+                ref={lastNameRef}
                 label="Last Name"
                 value={lastName}
                 onChangeText={setLastName}
                 placeholder="Enter your last name"
                 autoCapitalize="words"
                 returnKeyType="next"
+                onSubmitEditing={() => phoneRef.current?.focus()}
+                blurOnSubmit={false}
                 delay={400}
               />
+              
               <InputField
+                ref={phoneRef}
                 label="Phone Number"
                 value={phone}
                 onChangeText={handlePhoneChange}
@@ -119,9 +132,13 @@ export default function SignUpScreen() {
                 keyboardType="phone-pad"
                 returnKeyType="next"
                 maxLength={14}
+                onSubmitEditing={() => emailRef.current?.focus()}
+                blurOnSubmit={false}
                 delay={500}
               />
+
               <InputField
+                ref={emailRef}
                 label="Email"
                 value={email}
                 onChangeText={setEmail}
@@ -129,15 +146,19 @@ export default function SignUpScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
+                blurOnSubmit={false}
                 delay={600}
               />
               <InputField
+                ref={passwordRef}
                 label="Password"
                 value={password}
                 onChangeText={setPassword}
                 placeholder="Create a password"
                 secureTextEntry
                 returnKeyType="done"
+                onSubmitEditing={handleSignUp}
                 delay={700}
               />
             </View>

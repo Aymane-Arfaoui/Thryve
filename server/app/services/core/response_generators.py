@@ -12,6 +12,7 @@ from typing import AsyncIterator, NamedTuple
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from app.services.ext.azure_ai import get_llm, get_embeddings
 from config import AzureModels
+import re
 
 class AIStreamResponse(NamedTuple):
     response: str
@@ -84,7 +85,7 @@ async def get_response_stream(
     user_input: str,
     chat_history: ChatMessageHistory = ChatMessageHistory(),
     prompt_kwargs: dict = None,
-) -> AsyncIterator[str]:
+) -> AsyncIterator[AIStreamResponse]:
 
 
 
@@ -127,6 +128,52 @@ def get_prompt_template(sys_prompt: str, leading_prompt: str) -> ChatPromptTempl
     ])
 
 
+async def get_response_sentences(response_gen : AsyncIterator[AIStreamResponse]) -> AsyncIterator[str]:
+    
+    curr_sentence = ""
+    prev_sentence = ""
+
+    def get_sentence():
+        nonlocal curr_sentence
+        sentence = curr_sentence
+        curr_sentence = ""
+        return sentence
+
+    async for chunk in response_gen:
+        content = chunk.response
+        curr_sentence = prev_sentence + curr_sentence
+        prev_sentence = ""
+        if content:
+            curr_sentence += content
+        
+        if (len(curr_sentence) == 1 and re.search(r"[.!?]", curr_sentence)) or re.match(
+                r"^-?\d+\./$", curr_sentence.strip()
+            ):
+            curr_sentence = ""
+            continue
+
+        split_sentence = curr_sentence.split()
+        if (
+            "\n" in content
+            or re.search(r"[.!?]", content)
+            or ("," in content and len(split_sentence) > 3)
+        ):
+            yield get_sentence()
+            continue
+
+        if len(split_sentence) > 14:
+            prev_sentence = " ".join(split_sentence[9:])
+            curr_sentence = " ".join(split_sentence[0:9]) + " "
+            yield get_sentence()
+            continue
+
+
+            
+        
+
+        
+        
+
 # 1. First, let's create some sample documents
 documents = [
     Document(
@@ -166,11 +213,12 @@ chat_history = ChatMessageHistory()
 
 # 6. Get responses for questions
 async def ask_question(question: str):
-    async for response in get_response_stream(
+    response_gen = get_response_stream(
         chain=retrieval_chain,
         user_input=question,
         chat_history=chat_history
-    ):
+    )
+
+    async for response in get_response_sentences(response_gen):
         print(response)
 
-asyncio.run(ask_question("Who created Python?"))
