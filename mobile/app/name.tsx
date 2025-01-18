@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import ScreenWrapper from '../components/ScreenWrapper';
 import { InputField } from '../components/InputField';
@@ -8,18 +8,47 @@ import { KeyboardAwareView } from '../components/KeyboardAwareView';
 import { hp } from '../helpers/common';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { theme } from '../constants/theme';
+import { supabase } from '../lib/supabase';
 
 export default function NameScreen() {
   const router = useRouter();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const isValid = firstName.trim() !== '' && lastName.trim() !== '';
 
-  const handleNext = () => {
-    if (isValid) {
-      console.log('Name:', { firstName, lastName });
+  const handleNext = async () => {
+    if (!isValid) return;
+
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        Alert.alert("Error", "No authenticated user found");
+        router.replace('/signUp');
+        return;
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          full_name: `${firstName.trim()} ${lastName.trim()}`
+        }
+      });
+
+      if (error) {
+        Alert.alert("Error", error.message);
+        return;
+      }
+
       router.push('/phone');
+    } catch (error) {
+      Alert.alert("Error", "An unexpected error occurred");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -58,9 +87,9 @@ export default function NameScreen() {
           </View>
 
           <FormButton
-            title="Next"
+            title={loading ? "Saving..." : "Next"}
             onPress={handleNext}
-            disabled={!isValid}
+            disabled={!isValid || loading}
           />
         </View>
       </KeyboardAwareView>

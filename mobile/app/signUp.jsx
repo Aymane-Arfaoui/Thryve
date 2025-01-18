@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native'
 import React, { useState, useRef } from 'react'
 import ScreenWrapper from '../components/ScreenWrapper'
 import { StatusBar } from 'expo-status-bar'
@@ -13,43 +13,40 @@ import { supabase } from '../lib/supabase'
 export default function SignUp() {
   const router = useRouter();
   const emailRef = useRef("")
-  const nameRef = useRef("")
   const passwordRef = useRef("")
   const [loading, setLoading] = useState(false)
 
-<<<<<<< HEAD
-  const handleSignUp = () => {
-    console.log('Signing up with:', email, password);
-    router.push('/name');
-  };
-=======
   const handleSignUp = async () => {
     if(!emailRef.current || !passwordRef.current){
       Alert.alert("Sign Up", "Please fill in all fields");
       return;
-  }
+    }
 
-    let name = nameRef.current.trim();
     let email = emailRef.current.trim();
     let password = passwordRef.current.trim();
 
-
     setLoading(true);
 
-    const {data: {session}, error} = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data:{
-          name
-        }
+    try {
+      const { data: { session }, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        Alert.alert("Error", error.message);
+        return;
       }
-});
-  setLoading(false);
-  console.log("session", session);
-  console.log("error", error);
-}
->>>>>>> 88114f66 (auth functionality done)
+
+      if (session) {
+        router.push('/name');
+      }
+    } catch (error) {
+      Alert.alert("Error", "An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <ScreenWrapper>
@@ -77,12 +74,6 @@ export default function SignUp() {
               onChangeText={(text) => emailRef.current = text}
               keyboardType="email-address"
               autoCapitalize="none"
-            />
-            <FormInput
-              icon={<MaterialIcons name="person" size={24} color={theme.colors.textLight} />}
-              placeholder="Full Name"
-              onChangeText={(text) => nameRef.current = text}
-              autoCapitalize="words"
             />
             <FormInput
               icon={<MaterialIcons name="lock" size={24} color={theme.colors.textLight} />}
