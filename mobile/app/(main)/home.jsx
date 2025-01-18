@@ -36,7 +36,7 @@ export default function HomeScreen() {
     }
   };
 
-  // Dummy data for progress chart
+//   Dummy data for progress chart
   const progressData = {
     labels: ["Calls", "Goals", "Score"], // these are percentages
     data: [0.8, 0.6, 0.9]
@@ -80,12 +80,8 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          <Text style={styles.welcomeText}>
-            Hi, {userData?.first_name || 'User'}!
-          </Text>
-
           <View style={styles.scoreCardContainer}>
-            <View style={[styles.scoreCard, { backgroundColor: '#4338ca' }]}> {/* Indigo-600 */}
+            <View style={[styles.scoreCard, { backgroundColor: '#4338ca' }]}>
               <View style={styles.scoreHeader}>
                 <Text style={styles.scoreTitle}>Overall Score</Text>
                 <View style={styles.scoreBadge}>
@@ -95,8 +91,8 @@ export default function HomeScreen() {
               <Text style={styles.scoreValue}>92</Text>
               <View style={styles.scoreFooter}>
                 <View style={styles.scoreChange}>
-                  <Text style={styles.scoreChangeIcon}>↑</Text>
-                  <Text style={styles.scoreChangeText}>8% from last week</Text>
+                   <Text style={styles.scoreChangeIcon}>↑</Text>
+                  <Text style={styles.scoreChangeText}>8% from last week</Text> 
                 </View>
                 <TouchableOpacity style={styles.scoreDetailsButton}>
                   <Text style={styles.scoreDetailsText}>View Details</Text>
@@ -104,7 +100,7 @@ export default function HomeScreen() {
               </View>
             </View>
           </View>
-
+            {/* HERE:  */}
           <View style={styles.dashboardCard}>
             <Text style={styles.cardTitle}>Your Progress</Text>
             <View style={styles.chartContainer}>

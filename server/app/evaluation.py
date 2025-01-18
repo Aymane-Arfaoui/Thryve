@@ -1,5 +1,4 @@
 import re
-import langchain
 
 def setup_evaluation(transcript: str):
     # Extract goals
@@ -13,9 +12,9 @@ Goal 1: [goal 1]
 Goal 2: [goal 2]
 
 Daily Action 1: [daily action 1]
-Daily Action 2: [daily action 2]
-"""
-
+Daily Action 2: [daily action 2]"""
+    
+    return prompt
 
 
 def extract_goals_and_actions(response: str):
@@ -27,6 +26,18 @@ def extract_goals_and_actions(response: str):
     }
 
     return goals_and_actions
+
+
+def extract_action_name(transcript: str):
+    prompt = f"""From the following transcript, extract the name of the 2 habits the user wants to follow or stay away from each day.
+{transcript}
+
+Extract the name of the action in the following format and keep in less than 2 words. For example if the user says they want to drink water everyday the action name is "Water" or if they said they want to quit vaping the action name is "Vaping":
+
+Action 1: [action name]
+Action 2: [action name]"""
+    
+    return prompt
 
 
 def call_time_extractor(transcript: str):
