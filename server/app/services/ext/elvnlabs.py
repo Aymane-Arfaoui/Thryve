@@ -14,7 +14,7 @@ class ElevenLabsVoices(Enum):
 
 class ElevenLabsClient(StreamingVoiceInterface):
 
-    def __init__(self, voice_id: ElevenLabsVoices):
+    def __init__(self, voice_id: ElevenLabsVoices = ElevenLabsVoices.KAJEN):
         self.voice_id = voice_id
         self.stream_url = ELEVENLABS_STREAM_URL
         self.options = self._get_default_options()
@@ -70,6 +70,9 @@ class ElevenLabsClient(StreamingVoiceInterface):
                 "xi_api_key": ELEVENLABS_API_KEY,
                 "flush": flush
             }))
+        
+    def initialize_from_start_data(self, data : dict):
+        self.voice_id = ElevenLabsVoices.KAJEN
 
     @staticmethod
     def _get_default_options():

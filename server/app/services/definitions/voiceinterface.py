@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from app.services.definitions.call_elements import CallElement
 
-class StreamingVoiceInterface(ABC):
+class StreamingVoiceInterface(ABC, CallElement):
 
 
     @abstractmethod
@@ -8,15 +9,15 @@ class StreamingVoiceInterface(ABC):
         pass
 
     @abstractmethod
-    def start_connection(self) -> None:
+    async def start_connection(self) -> None:
         pass
 
     @abstractmethod
-    def stop_connection(self) -> None:
+    async def stop_connection(self) -> None:
         pass
 
     @abstractmethod
-    def send_audio_request(self, 
+    async def send_audio_request(self, 
                            text : str, 
                            flush : bool = False) -> None:
         pass

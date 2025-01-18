@@ -9,13 +9,13 @@ class Observer:
     def add_event_listener(self, event : Any, func : callable):
         self.events_map[event] = func
 
-    def on_event(self, event : Any, data : Any):
+    async def on_event(self, event : Any, data : Any):
         if event in self.events_map:
-            self.events_map[event](data)
+            await self.events_map[event](data)
 
 class VoiceAgentEvent(Enum):
     AUDIO_GENERATED = "audio_generated"
-
+    USER_SPEAKING = "user_speaking"
 class VoiceAgentObserver(Observer):
 
     def __init__(self):
@@ -25,7 +25,11 @@ class VoiceAgentObserver(Observer):
         super().add_event_listener(event, func)
 
 class CallEvent(Enum):
+    CALL_STARTED = "call_started"
+    CALL_ENDED = "call_ended"
     AUDIO_CHUNK = "audio_chunk"
+    
+
 
 class CallObserver(Observer):
 

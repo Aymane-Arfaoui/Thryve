@@ -48,6 +48,9 @@ class DeepgramTranscriptionService():
     async def send_audio(self, audio_data: bytes):
         await self.dg_connection.send(audio_data)
 
+    def initialize_from_start_data(self, data : dict):
+        pass   
+
     @staticmethod
     def _get_default_stream_options():
         options = LiveOptions(
