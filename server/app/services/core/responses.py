@@ -10,9 +10,6 @@ from langchain.memory import ChatMessageHistory
 import asyncio
 from typing import AsyncIterator, NamedTuple
 from langchain.chains.combine_documents import create_stuff_documents_chain
-
-
-
 from app.services.ext.azure_ai import get_llm, get_embeddings
 from config import AzureModels
 
