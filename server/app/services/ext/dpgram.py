@@ -21,8 +21,13 @@ class DeepgramTranscriptionService():
         self.dg_connection = DEEPGRAM_CLIENT.listen.asyncwebsocket.v("1")
 
     def set_on_transcript_received(self, func : callable):
+
+        async def on_result_func(result : LiveResultResponse):
+            await func(result, self.transcription_parser)
+
+
         self.dg_connection.on(LiveTranscriptionEvents.Transcript, 
-                              lambda result: func(result, self.transcription_parser))
+                              on_result_func)
 
     def transcription_parser(self, result : LiveResultResponse):
         transcript = result.channel.alternatives[0].transcript

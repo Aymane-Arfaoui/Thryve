@@ -2,6 +2,11 @@ from abc import ABC, abstractmethod
 
 class StreamingVoiceInterface(ABC):
 
+
+    @abstractmethod
+    def on_audiogen_response_received(self, func : callable) -> None:
+        pass
+
     @abstractmethod
     def start_connection(self) -> None:
         pass

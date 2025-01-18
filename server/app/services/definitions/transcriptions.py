@@ -24,3 +24,7 @@ class TranscriptionService(ABC):
     @abstractmethod
     def stop_connection(self) -> None:
         pass
+
+    @abstractmethod
+    def send_audio(self, audio_bytes : bytes) -> None:
+        pass

@@ -22,6 +22,8 @@ class ElevenLabsClient(StreamingVoiceInterface):
         self.started = False
         self.on_audio_received_callback = None   
 
+    def on_audiogen_response_received(self, func : callable) -> None:
+        self.on_audio_received_callback = func
 
 
     async def start_connection(self):
@@ -46,7 +48,11 @@ class ElevenLabsClient(StreamingVoiceInterface):
                 response : dict = json.loads(msg)
 
                 if response.get('audio') and self.on_audio_received_callback:
-                    self.on_audio_received_callback(response['audio'])
+
+                    if asyncio.iscoroutinefunction(self.on_audio_received_callback):
+                        await self.on_audio_received_callback(response['audio'])
+                    else:
+                        self.on_audio_received_callback(response['audio'])
         except websockets.exceptions.ConnectionClosed as e:
             print(f"Connection closed: {e}")
             await self.ws_connection.close()
