@@ -47,13 +47,14 @@ async def call_handler(request : web.Request):
     call_observer.add_event_listener(CallEvent.CALL_STARTED, elevenlabs_voice_interface.initialize_from_start_data)
     call_observer.add_event_listener(CallEvent.CALL_STARTED, deepgram_stt_service.initialize_from_start_data)
     call_observer.add_event_listener(CallEvent.CALL_STARTED, response_engine.initialize_from_start_data)
-    
+
     call_observer.add_event_listener(CallEvent.AUDIO_CHUNK, voice_agent.put_raw_audio)
     call_observer.add_event_listener(CallEvent.CALL_ENDED, voice_agent.stop)
     call_observer.add_event_listener(CallEvent.CALL_ENDED, finalize_call)
 
     voice_agent_observer.add_event_listener(VoiceAgentEvent.AUDIO_GENERATED, call_stream_client.send_audio)
-
+    voice_agent_observer.add_event_listener(VoiceAgentEvent.INTERRUPTED, call_stream_client.send_clear)
+    
     voice_agent.prepare()
 
     await asyncio.gather(call_stream_client.start_connection(request), voice_agent.start())

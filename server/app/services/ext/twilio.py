@@ -46,8 +46,9 @@ class TwilioCallStreamClient:
                 print(f"Error: {msg.data}")
 
 
-    async def send_clear(self):
+    async def send_clear(self, *args):
         clear_msg = {"event": "clear", "streamSid": self.stream_sid}
+        print("sending clear message")
         await self.ws.send_str(json.dumps(clear_msg))
 
     async def send_audio(self, audio_data : bytes):

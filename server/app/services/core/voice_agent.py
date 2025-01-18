@@ -104,8 +104,11 @@ class VoiceAgent:
 
             if self.voice_context.agent_speaking:
                 print("User Interrupted")
+
                 self.voice_interface.set_ignore_incoming_audio(True)
+                self.voice_interface.force_flush()
                 self.voice_context.interruption = True
+                await self.notify_observers(VoiceAgentEvent.INTERRUPTED, True)
 
             if speech_ended:
                 print("Speech ended")
