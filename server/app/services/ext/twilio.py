@@ -5,6 +5,10 @@ from server.app.services.core.observers import CallObserver, CallEvent
 import base64
 from server.app.utils.audio import convert_mulaw_to_b64
 from typing import Any
+from twilio.twiml.voice_response import VoiceResponse, Pause, Say, Start,Connect, Parameter, Play, Conference, Dial
+from twilio.rest import Client
+
+
 class TwilioCallStreamClient:
 
     def __init__(self, call_observers : list[CallObserver]):
@@ -56,3 +60,24 @@ class TwilioCallStreamClient:
             }
         
         await self.ws.send_str(json.dumps(message))
+
+class TwimlStreamBuilder:
+
+    def __init__(self):
+        self.response = VoiceResponse()
+        self.connect = None
+        self.stream_element = None
+    
+    def with_ws_url(self, ws_url : str):
+        self.connect = Connect()
+        self.stream_element = self.connect.stream(url = ws_url)
+
+    def with_params(self, **kwargs):
+        for key, value in kwargs.items():
+            param = Parameter(name=key, value=value)
+            self.stream_element.append(param)
+
+    def build(self):
+        self.response.append(self.connect)
+        self.response.append(Pause(length="1000"))
+        return self.response
