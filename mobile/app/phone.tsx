@@ -49,7 +49,7 @@ export default function PhoneScreen() {
   const handleNext = () => {
     if (isValid) {
       console.log('Phone:', `+1${phone.replace(/\D/g, '')}`);
-      router.push('/dashboard');
+      router.push('/call');
     }
   };
 
