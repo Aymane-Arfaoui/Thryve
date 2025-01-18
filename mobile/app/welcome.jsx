@@ -13,7 +13,7 @@ const welcome = () => {
    <ScreenWrapper>
     <StatusBar style="dark" />
     <View style={styles.container}>
-        <Image style={styles.welcomeImage} resizeMode='stretch' source={require('../assets/images/image.png')} />
+        <Image style={styles.welcomeImage} source={require('../assets/images/robot_icon.png')} />
         <View style={{gap: 20}}>
                 <Text style={styles.title}>Thryve</Text>
                 <Text style={styles.punchline}>
@@ -43,12 +43,12 @@ const styles = StyleSheet.create({
         flex:1,
         justifyContent:'space-around',
         alignItems:'center',
-        backgroundColor:'white',
+        // backgroundColor: "dark",
         paddingHorizontal: wp(4)
     },
     welcomeImage:{
-        height: hp(40),
-        width: wp(95),
+        height: hp(45),
+        width: wp(90),
         alignSelf:'center',
     },
     title:{
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     footer:{
         gap: 30,
         width: '100%',
-        //marginBottom: hp(4),
+        marginBottom: hp(4),
     },
     bottomTextContainer:{
         flexDirection:'row',
