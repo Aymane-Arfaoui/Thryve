@@ -7,6 +7,7 @@ load_dotenv()  # Load environment variables from .env file
 SUPABASE_KEY = os.getenv('SUPABASE_KEY')
 # Replace with your Supabase project URL and API key
 SUPABASE_URL = "https://iuxxctpityftaywmmosp.supabase.co"
+SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1eHhjdHBpdHlmdGF5d21tb3NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcxNzcwOTksImV4cCI6MjA1Mjc1MzA5OX0.AJee9EGCpCcsUeNemdLrjVlHWOQgEgd0BkaAMw6Ae6Q"
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
