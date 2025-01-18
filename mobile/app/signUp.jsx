@@ -1,176 +1,204 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native'
-import React, { useState, useRef } from 'react'
-import ScreenWrapper from '../components/ScreenWrapper'
-import { StatusBar } from 'expo-status-bar'
-import { hp, wp } from '../helpers/common'
-import { theme } from '../constants/theme'
-import BackButton from '../components/BackButton'
-import { useRouter } from 'expo-router'
-import { FormInput } from '../components/FormInput'
-import { MaterialIcons } from '@expo/vector-icons'
-import { supabase } from '../lib/supabase'
-import { KeyboardAwareView } from '../components/KeyboardAwareView'
+import React, { useState } from 'react';
+import { View, StyleSheet, Alert, Text, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
+import ScreenWrapper from '../components/ScreenWrapper';
+import { InputField } from '../components/InputField';
+import { FormButton } from '../components/FormButton';
+import { KeyboardAwareView } from '../components/KeyboardAwareView';
+import { hp } from '../helpers/common';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import { theme } from '../constants/theme';
+import { supabase } from '../lib/supabase';
 
-export default function SignUp() {
+export default function SignUpScreen() {
   const router = useRouter();
-  const emailRef = useRef("")
-  const passwordRef = useRef("")
-  const [loading, setLoading] = useState(false)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const validatePhone = (number) => {
+    const phoneRegex = /^\d{10}$/;
+    return phoneRegex.test(number.replace(/\D/g, ''));
+  };
+
+  const formatPhoneNumber = (text) => {
+    const cleaned = text.replace(/\D/g, '');
+    let formatted = cleaned;
+    if (cleaned.length > 0) {
+      if (cleaned.length <= 3) {
+        formatted = `(${cleaned}`;
+      } else if (cleaned.length <= 6) {
+        formatted = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
+      } else {
+        formatted = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
+      }
+    }
+    return formatted;
+  };
+
+  const handlePhoneChange = (text) => {
+    const formatted = formatPhoneNumber(text);
+    setPhone(formatted);
+  };
 
   const handleSignUp = async () => {
-    if(!emailRef.current || !passwordRef.current){
-      Alert.alert("Sign Up", "Please fill in all fields");
+    if (!email || !password || !firstName || !lastName || !validatePhone(phone)) {
+      Alert.alert('Error', 'Please fill in all fields correctly');
       return;
     }
 
-    let email = emailRef.current.trim();
-    let password = passwordRef.current.trim();
-
     setLoading(true);
-
     try {
-      const { data: { session }, error } = await supabase.auth.signUp({
+      const formattedPhone = `+1${phone.replace(/\D/g, '')}`;
+      const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            full_name: `${firstName.trim()} ${lastName.trim()}`,
+            phone_number: formattedPhone
+          }
+        }
       });
 
       if (error) {
-        Alert.alert("Error", error.message);
+        Alert.alert('Error', error.message);
         return;
       }
 
-      if (session) {
-        router.push('/name');
-      }
+      router.push('/login');
+      
     } catch (error) {
-      Alert.alert("Error", "An unexpected error occurred");
+      Alert.alert('Error', 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <ScreenWrapper>
-      <StatusBar style="dark" />
       <KeyboardAwareView>
         <View style={styles.container}>
-          <BackButton router={router} onPress={() => router.replace('welcome')}/>
-
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>Thryve</Text>
-            <Text style={styles.subtitle}>Your journey to a better you starts here</Text>
-          </View>
-
-          {/* Form Section */}
-          <View style={styles.formSection}>
-            <View style={styles.welcomeContainer}>
-              <Text style={styles.welcomeText}>Let's</Text>
-              <Text style={styles.welcomeText}>Get Started</Text>
-            </View>
+          <View style={styles.content}>
+            <Animated.Text 
+              style={styles.header}
+              entering={FadeIn.delay(200).springify()}
+            >
+              Create Account
+            </Animated.Text>
 
             <View style={styles.form}>
-              <FormInput
-                icon={<MaterialIcons name="email" size={24} color={theme.colors.textLight} />}
-                placeholder="Email"
-                onChangeText={(text) => emailRef.current = text}
+              <InputField
+                label="First Name"
+                value={firstName}
+                onChangeText={setFirstName}
+                placeholder="Enter your first name"
+                autoCapitalize="words"
+                returnKeyType="next"
+                delay={300}
+              />
+              <InputField
+                label="Last Name"
+                value={lastName}
+                onChangeText={setLastName}
+                placeholder="Enter your last name"
+                autoCapitalize="words"
+                returnKeyType="next"
+                delay={400}
+              />
+              <InputField
+                label="Phone Number"
+                value={phone}
+                onChangeText={handlePhoneChange}
+                placeholder="(555) 123-4567"
+                keyboardType="phone-pad"
+                returnKeyType="next"
+                maxLength={14}
+                delay={500}
+              />
+              <InputField
+                label="Email"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Enter your email"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 returnKeyType="next"
+                delay={600}
               />
-              <FormInput
-                icon={<MaterialIcons name="lock" size={24} color={theme.colors.textLight} />}
-                placeholder="Password"
-                onChangeText={(text) => passwordRef.current = text}
+              <InputField
+                label="Password"
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Create a password"
                 secureTextEntry
                 returnKeyType="done"
+                delay={700}
               />
-              
-              <TouchableOpacity 
-                style={styles.signUpButton} 
-                onPress={handleSignUp}
-                activeOpacity={0.8}
-                disabled={loading}
-              >
-                <Text style={styles.signUpButtonText}>
-                  {loading ? 'Creating Account...' : 'Start Thryving'}
-                </Text>
-              </TouchableOpacity>
             </View>
           </View>
 
-          {/* Footer */}
-          <TouchableOpacity 
-            style={styles.footer}
-            onPress={() => router.push('/login')}
-          >
-            <Text style={styles.footerText}>Already Thryving? </Text>
-            <Text style={[styles.footerText, styles.footerLink]}>Log in</Text>
-          </TouchableOpacity>
+          <View style={styles.bottomContainer}>
+            <FormButton
+              title={loading ? "Creating Account..." : "Sign Up"}
+              onPress={handleSignUp}
+              disabled={loading}
+            />
+
+            <Animated.View 
+              style={styles.loginContainer}
+              entering={FadeIn.delay(600)}
+            >
+              <Text style={styles.loginText}>Already have an account? </Text>
+              <TouchableOpacity onPress={() => router.push('/login')}>
+                <Text style={styles.loginLink}>Login</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
         </View>
       </KeyboardAwareView>
     </ScreenWrapper>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: 'space-between',
+    paddingVertical: hp(4),
+  },
+  content: {
+    flex: 1,
+    gap: hp(6),
   },
   header: {
-    alignItems: 'center',
-    marginTop: hp(2),
-  },
-  title: {
-    fontSize: hp(4.5),
+    fontSize: hp(3.5),
     fontWeight: theme.fonts.bold,
     color: theme.colors.dark,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: hp(1.6),
-    color: theme.colors.textLight,
-    marginTop: hp(1),
-  },
-  formSection: {
-    flex: 1,
-    marginTop: hp(6),
-  },
-  welcomeContainer: {
-    marginBottom: hp(4),
-  },
-  welcomeText: {
-    fontSize: hp(4),
-    fontWeight: theme.fonts.bold,
-    color: theme.colors.dark,
-    letterSpacing: -0.5,
-  },
-  form: {
-    gap: hp(2.5),
-  },
-  signUpButton: {
-    backgroundColor: theme.colors.button,
-    padding: hp(2),
-    borderRadius: theme.radius.sm,
-    marginTop: hp(2),
-  },
-  signUpButtonText: {
-    color: theme.colors.white,
-    fontSize: hp(1.8),
-    fontWeight: theme.fonts.semibold,
     textAlign: 'center',
   },
-  footer: {
+  form: {
+    gap: hp(3),
+  },
+  bottomContainer: {
+    gap: hp(2),
+  },
+  loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: hp(4),
   },
-  footerText: {
+  loginText: {
     fontSize: hp(1.6),
     color: theme.colors.textLight,
   },
-  footerLink: {
+  loginLink: {
+    fontSize: hp(1.6),
     color: theme.colors.button,
     fontWeight: theme.fonts.semibold,
   },
