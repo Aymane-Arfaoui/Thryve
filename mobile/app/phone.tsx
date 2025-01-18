@@ -8,11 +8,14 @@ import { KeyboardAwareView } from '../components/KeyboardAwareView';
 import { hp, wp } from '../helpers/common';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { theme } from '../constants/theme';
+import { Alert } from 'react-native';
+import { supabase } from '../lib/supabase';
 
 export default function PhoneScreen() {
   const router = useRouter();
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const validatePhone = (number: string) => {
     const phoneRegex = /^\d{10}$/;
@@ -46,10 +49,39 @@ export default function PhoneScreen() {
 
   const isValid = validatePhone(phone.replace(/\D/g, ''));
 
-  const handleNext = () => {
-    if (isValid) {
-      console.log('Phone:', `+1${phone.replace(/\D/g, '')}`);
+  const handleNext = async () => {
+    if (!isValid) return;
+
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        Alert.alert("Error", "No authenticated user found");
+        router.replace('/signUp');
+        return;
+      }
+
+      // Format phone number to E.164 format
+      const formattedPhone = `+1${phone.replace(/\D/g, '')}`;
+      
+      // Update user's metadata, similar to how name is stored
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          phone_number: formattedPhone
+        }
+      });
+
+      if (error) {
+        Alert.alert("Error", error.message);
+        return;
+      }
+
       router.push('/call');
+    } catch (error) {
+      Alert.alert("Error", "An unexpected error occurred");
+    } finally {
+      setLoading(false);
     }
   };
 

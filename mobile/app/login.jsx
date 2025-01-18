@@ -1,150 +1,139 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native'
-import React, { useState, useRef } from 'react'
-import ScreenWrapper from '../components/ScreenWrapper'
-import { StatusBar } from 'expo-status-bar'
-import { hp, wp } from '../helpers/common'
-import { theme } from '../constants/theme'
-import BackButton from '../components/BackButton'
-import { useRouter } from 'expo-router'
-import { FormInput } from '../components/FormInput'
-import { MaterialIcons } from '@expo/vector-icons'
-import { KeyboardAwareView } from '../components/KeyboardAwareView'
+import React, { useState } from 'react';
+import { View, StyleSheet, Alert,  Text, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
+import ScreenWrapper from '../components/ScreenWrapper';
+import { InputField } from '../components/InputField';
+import { FormButton } from '../components/FormButton';
+import { KeyboardAwareView } from '../components/KeyboardAwareView';
+import { hp } from '../helpers/common';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import { theme } from '../constants/theme';
+import { supabase } from '../lib/supabase';
 
-export default function Login() {
+export default function LoginScreen() {
   const router = useRouter();
-  const emailRef = useRef("")
-  const passwordRef = useRef("")
-  const [loading, setLoading] = useState(false)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    console.log('Logging in with:', emailRef.current, passwordRef.current);
-    router.push('/name');
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim()
+      });
+
+      if (error) {
+        Alert.alert('Error', error.message);
+        return;
+      }
+
+      // On successful login, navigate to the appropriate screen
+      router.replace('/home');
+    } catch (error) {
+      Alert.alert('Error', 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <ScreenWrapper>
-      <StatusBar style="dark" />
       <KeyboardAwareView>
         <View style={styles.container}>
-          <BackButton router={router} onPress={() => router.replace('welcome')}/>
+          <View style={styles.content}>
+            <Animated.Text 
+              style={styles.header}
+              entering={FadeIn.delay(200).springify()}
+            >
+              Welcome Back
+            </Animated.Text>
 
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Continue your journey with Thryve</Text>
-          </View>
-
-          {/* Form Section */}
-          <View style={styles.formSection}>
             <View style={styles.form}>
-              <FormInput
-                icon={<MaterialIcons name="email" size={24} color={theme.colors.textLight} />}
-                placeholder="Email"
-                onChangeText={(text) => emailRef.current = text}
+              <InputField
+                label="Email"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Enter your email"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 returnKeyType="next"
+                delay={300}
               />
-              <FormInput
-                icon={<MaterialIcons name="lock" size={24} color={theme.colors.textLight} />}
-                placeholder="Password"
-                onChangeText={(text) => passwordRef.current = text}
+              <InputField
+                label="Password"
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Enter your password"
                 secureTextEntry
                 returnKeyType="done"
+                delay={400}
               />
-              
-              <TouchableOpacity 
-                style={styles.loginButton} 
-                onPress={handleLogin}
-                activeOpacity={0.8}
-                disabled={loading}
-              >
-                <Text style={styles.loginButtonText}>
-                  {loading ? 'Logging in...' : 'Log In'}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.forgotPassword}
-                onPress={() => router.push('/forgot-password')}
-              >
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-              </TouchableOpacity>
             </View>
           </View>
 
-          {/* Footer */}
-          <TouchableOpacity 
-            style={styles.footer}
-            onPress={() => router.push('/signUp')}
-          >
-            <Text style={styles.footerText}>New to Thryve? </Text>
-            <Text style={[styles.footerText, styles.footerLink]}>Sign up</Text>
-          </TouchableOpacity>
+          <View style={styles.bottomContainer}>
+            <FormButton
+              title={loading ? "Logging in..." : "Login"}
+              onPress={handleLogin}
+              disabled={loading}
+            />
+
+            <Animated.View 
+              style={styles.signupContainer}
+              entering={FadeIn.delay(600)}
+            >
+              <Text style={styles.signupText}>Don't have an account? </Text>
+              <TouchableOpacity onPress={() => router.push('/signUp')}>
+                <Text style={styles.signupLink}>Sign Up</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
         </View>
       </KeyboardAwareView>
     </ScreenWrapper>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: 'space-between',
+    paddingVertical: hp(4),
+  },
+  content: {
+    flex: 1,
+    gap: hp(6),
   },
   header: {
-    alignItems: 'center',
-    marginTop: hp(2),
-  },
-  title: {
-    fontSize: hp(4.5),
+    fontSize: hp(3.5),
     fontWeight: theme.fonts.bold,
     color: theme.colors.dark,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: hp(1.6),
-    color: theme.colors.textLight,
-    marginTop: hp(1),
-  },
-  formSection: {
-    flex: 1,
-    marginTop: hp(8),
-  },
-  form: {
-    gap: hp(2.5),
-  },
-  loginButton: {
-    backgroundColor: theme.colors.button,
-    padding: hp(2),
-    borderRadius: theme.radius.sm,
-    marginTop: hp(2),
-  },
-  loginButtonText: {
-    color: theme.colors.white,
-    fontSize: hp(1.8),
-    fontWeight: theme.fonts.semibold,
     textAlign: 'center',
   },
-  forgotPassword: {
-    alignItems: 'center',
-    marginTop: hp(2),
+  form: {
+    gap: hp(3),
   },
-  forgotPasswordText: {
-    color: theme.colors.button,
-    fontSize: hp(1.6),
-    fontWeight: theme.fonts.medium,
+  bottomContainer: {
+    gap: hp(2),
   },
-  footer: {
+  signupContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: hp(4),
   },
-  footerText: {
+  signupText: {
     fontSize: hp(1.6),
     color: theme.colors.textLight,
   },
-  footerLink: {
+  signupLink: {
+    fontSize: hp(1.6),
     color: theme.colors.button,
     fontWeight: theme.fonts.semibold,
   },
