@@ -17,11 +17,6 @@ Daily Action 2: [daily action 2]
 """
 
 
-sample_response = """Goal 1: Get in better shape (lose weight, build muscle, and improve overall health)
-Goal 2: Quit vaping
-
-Daily Action 1: Go to the gym every day
-Daily Action 2: Stay occupied during morning cravings"""
 
 def extract_goals_and_actions(response: str):
     goals_and_actions = {
@@ -33,18 +28,25 @@ def extract_goals_and_actions(response: str):
 
     return goals_and_actions
 
-# extract_goals_and_actions(sample_response)
+
+def call_time_extractor(transcript: str):
+    # Extract time for next call
+    prompt = f"""From the following transcript, extract the time for the next call.
+{transcript}
+
+Extract the time for the next call in the following format:
+Call Time: 13:00"""
+
+    return prompt
 
 
-def night_call_evaluation(transcript: str):
-    # Extract followed & not followed status for each action
-    pass
 
 
+# sample_response = """Goal 1: Get in better shape (lose weight, build muscle, and improve overall health)
+# Goal 2: Quit vaping
 
-
-
-
+# Daily Action 1: Go to the gym every day
+# Daily Action 2: Stay occupied during morning cravings"""
 
 
 # sample_transcript = """Coach: Hi Michael, I’m Goggins, your personal life coach. How’s it going?
