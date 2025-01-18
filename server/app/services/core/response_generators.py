@@ -130,45 +130,50 @@ def get_prompt_template(sys_prompt: str, leading_prompt: str) -> ChatPromptTempl
 
 async def get_response_sentences(response_gen : AsyncIterator[AIStreamResponse]) -> AsyncIterator[str]:
     
-    curr_sentence = ""
-    prev_sentence = ""
+    print("Getting response sentences")
 
-    def get_sentence():
-        nonlocal curr_sentence
-        sentence = curr_sentence
+    try:
         curr_sentence = ""
-        return sentence
-
-    async for chunk in response_gen:
-        content = chunk.response
-        curr_sentence = prev_sentence + curr_sentence
         prev_sentence = ""
-        if content:
-            curr_sentence += content
-        
-        if (len(curr_sentence) == 1 and re.search(r"[.!?]", curr_sentence)) or re.match(
-                r"^-?\d+\./$", curr_sentence.strip()
-            ):
+
+        def get_sentence():
+            nonlocal curr_sentence
+            sentence = curr_sentence
             curr_sentence = ""
-            continue
+            return sentence
 
-        split_sentence = curr_sentence.split()
-        if (
-            "\n" in content
-            or re.search(r"[.!?]", content)
-            or ("," in content and len(split_sentence) > 3)
-        ):
-            yield get_sentence()
-            continue
-
-        if len(split_sentence) > 14:
-            prev_sentence = " ".join(split_sentence[9:])
-            curr_sentence = " ".join(split_sentence[0:9]) + " "
-            yield get_sentence()
-            continue
-
-
+        async for chunk in response_gen:
+            print("Chunk: ", chunk)
+            content = chunk.response
+            curr_sentence = prev_sentence + curr_sentence
+            prev_sentence = ""
+            if content:
+                curr_sentence += content
             
+            if (len(curr_sentence) == 1 and re.search(r"[.!?]", curr_sentence)) or re.match(
+                    r"^-?\d+\./$", curr_sentence.strip()
+                ):
+                curr_sentence = ""
+                continue
+
+            split_sentence = curr_sentence.split()
+            if (
+                "\n" in content
+                or re.search(r"[.!?]", content)
+                or ("," in content and len(split_sentence) > 3)
+            ):
+                yield get_sentence()
+                continue
+
+            if len(split_sentence) > 14:
+                prev_sentence = " ".join(split_sentence[9:])
+                curr_sentence = " ".join(split_sentence[0:9]) + " "
+                yield get_sentence()
+                continue
+
+    except Exception as e:
+        print("Error: ", e)
+        raise e
         
 
         

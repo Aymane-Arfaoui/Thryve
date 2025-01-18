@@ -22,7 +22,7 @@ class DeepgramTranscriptionService():
 
     def set_on_transcript_received(self, func : callable):
 
-        async def on_result_func(result : LiveResultResponse):
+        async def on_result_func(_, result : LiveResultResponse):
             await func(result, self.transcription_parser)
 
 
@@ -30,6 +30,7 @@ class DeepgramTranscriptionService():
                               on_result_func)
 
     def transcription_parser(self, result : LiveResultResponse):
+        # print("Parsing Transcription result: ", result)
         transcript = result.channel.alternatives[0].transcript
         is_final = result.is_final
         speech_final = result.speech_final
@@ -48,7 +49,7 @@ class DeepgramTranscriptionService():
     async def send_audio(self, audio_data: bytes):
         await self.dg_connection.send(audio_data)
 
-    def initialize_from_start_data(self, data : dict):
+    async def initialize_from_start_data(self, data : dict):
         pass   
 
     @staticmethod

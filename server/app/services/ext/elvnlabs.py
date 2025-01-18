@@ -20,17 +20,22 @@ class ElevenLabsClient(StreamingVoiceInterface):
         self.options = self._get_default_options()
         self.ws_connection : websockets.WebSocketClientProtocol = None
         self.started = False
+        self.ignore_incoming_audio = False
         self.on_audio_received_callback = None   
 
     def on_audiogen_response_received(self, func : callable) -> None:
         self.on_audio_received_callback = func
 
-
     async def start_connection(self):
+        print("Starting ElevenLabs connection")
         stream_url = self.stream_url.format(ELEVENLABS_VOICE_ID=self.voice_id.value) + "?" + "&".join([f"{key}={value}" for key, value in self.options.items()])
         async with websockets.connect(stream_url) as ws:
             self.ws_connection = ws
             self.started = True
+            
+            await self.send_audio_request(" ")
+            print("Elevenlabs connected")
+
             await self._receive_message()
 
     async def stop_connection(self):
@@ -39,17 +44,31 @@ class ElevenLabsClient(StreamingVoiceInterface):
         await self.ws_connection.close()
         self.started = False
 
+    def set_ignore_incoming_audio(self, ignore : bool):
+        self.ignore_incoming_audio = ignore
+
     async def _receive_message(self):
 
         if not self.started:
+            print("Elevenlabs not started")
             return
         try:
+            print("Receiving Elevenlabs message")
             async for msg in self.ws_connection:
+
+                if self.ignore_incoming_audio:
+                    print("Ignoring incoming audio")
+                    continue
+
+                # print("Received Elevenlabs message", msg)
+
                 response : dict = json.loads(msg)
+                
 
                 if response.get('audio') and self.on_audio_received_callback:
 
                     if asyncio.iscoroutinefunction(self.on_audio_received_callback):
+                        print("Audio callback is a coroutine")
                         await self.on_audio_received_callback(response['audio'])
                     else:
                         self.on_audio_received_callback(response['audio'])
@@ -58,20 +77,25 @@ class ElevenLabsClient(StreamingVoiceInterface):
             await self.ws_connection.close()
 
     async def send_audio_request(self, text, flush=False):
-        print(f"Sending request to elevenlabs: {text}")
 
+        try:
+            
+            # print("Sending request to elevenlabs: ", text)
 
-        while not self.started:
-            await asyncio.sleep(0.1)
+            await self.ws_connection.send(json.dumps({
+                    "text": text + " " * (flush),
+                    "voice_settings": {"stability": 0.5, "similarity_boost": 0.8, "use_speaker_boost": False},
+                    "xi_api_key": ELEVENLABS_API_KEY,
+                    "flush": flush
+                }))
+        except Exception as e:
+            print("Error sending request to elevenlabs: ", e)
 
-        await self.ws_connection.send(json.dumps({
-                "text": text + " " * (flush),
-                "voice_settings": {"stability": 0.5, "similarity_boost": 0.8, "use_speaker_boost": False},
-                "xi_api_key": ELEVENLABS_API_KEY,
-                "flush": flush
-            }))
-        
-    def initialize_from_start_data(self, data : dict):
+    async def force_flush(self, *args):
+        await self.send_audio_request("", flush=True)
+        # await self.send_audio_request("", flush=True)
+
+    async def initialize_from_start_data(self, data : dict):
         self.voice_id = ElevenLabsVoices.KAJEN
 
     @staticmethod

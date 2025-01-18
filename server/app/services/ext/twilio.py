@@ -1,9 +1,9 @@
 
 from aiohttp import web
 import json
-from server.app.services.core.observers import CallObserver, CallEvent
+from app.services.core.observers import CallObserver, CallEvent
 import base64
-from server.app.utils.audio import convert_mulaw_to_b64
+from app.utils.audio import convert_mulaw_to_b64
 from typing import Any
 from twilio.twiml.voice_response import VoiceResponse, Pause, Say, Start,Connect, Parameter, Play, Conference, Dial
 from twilio.rest import Client

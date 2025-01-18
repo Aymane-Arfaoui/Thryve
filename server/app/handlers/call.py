@@ -36,13 +36,17 @@ async def call_handler(request : web.Request):
                              call_context,
                              [voice_agent_observer])
 
-    async def finalize_call():
+    async def finalize_call(_):
         await data_update_service.update_data(response_engine.chat_history)
 
-    call_observer.add_event_listener(CallEvent.CALL_STARTED, call_context.parse_twilio_start_data)
-    call_observer.add_event_listener(CallEvent.CALL_STARTED, response_engine.initialize_from_start_data)
+    async def say_first_response():
+        await voice_agent.generate_response("Greet me now.")
+        
+
+    call_observer.add_event_listener(CallEvent.CALL_STARTED, say_first_response)
     call_observer.add_event_listener(CallEvent.CALL_STARTED, elevenlabs_voice_interface.initialize_from_start_data)
     call_observer.add_event_listener(CallEvent.CALL_STARTED, deepgram_stt_service.initialize_from_start_data)
+    call_observer.add_event_listener(CallEvent.CALL_STARTED, response_engine.initialize_from_start_data)
     
     call_observer.add_event_listener(CallEvent.AUDIO_CHUNK, voice_agent.put_raw_audio)
     call_observer.add_event_listener(CallEvent.CALL_ENDED, voice_agent.stop)
@@ -52,6 +56,6 @@ async def call_handler(request : web.Request):
 
     voice_agent.prepare()
 
-    await asyncio.gather(voice_agent.start(), call_stream_client.start_connection(request))
+    await asyncio.gather(call_stream_client.start_connection(request), voice_agent.start())
 
     return call_stream_client.ws

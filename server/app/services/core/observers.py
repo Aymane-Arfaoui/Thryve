@@ -7,15 +7,17 @@ class Observer:
         self.events_map : dict[Any, callable] = {}
 
     def add_event_listener(self, event : Any, func : callable):
+        print(f"Adding event listener for {event}", "function", func)
         self.events_map[event] = func
 
     async def on_event(self, event : Any, data : Any):
         if event in self.events_map:
+            # print(f"Calling event listener for {event}", "function", self.events_map[event])
             await self.events_map[event](data)
 
 class VoiceAgentEvent(Enum):
     AUDIO_GENERATED = "audio_generated"
-    USER_SPEAKING = "user_speaking"
+    INTERRUPTED = "user_speaking"
 class VoiceAgentObserver(Observer):
 
     def __init__(self):

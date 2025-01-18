@@ -8,7 +8,7 @@ class TranscriptionResult(NamedTuple):
     speech_ended : bool
     confidence : float 
 
-class TranscriptionService(ABC, CallElement):
+class TranscriptionService(CallElement, ABC):
 
     @abstractmethod
     def set_on_transcript_received(self, func : callable) -> None:
