@@ -7,7 +7,7 @@ import { StatusBar } from 'expo-status-bar'
 import { useRouter } from 'expo-router'
 import Button from '../components/Button'
 
-const welcome = () => {
+export default function Welcome() {
     const router = useRouter();
   return (
    <ScreenWrapper>
@@ -35,8 +35,6 @@ const welcome = () => {
     </ScreenWrapper>
   )
 }
-
-export default welcome
 
 const styles = StyleSheet.create({
     container:{

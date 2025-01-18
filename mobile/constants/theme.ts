@@ -1,0 +1,80 @@
+export const theme = {
+  colors: {
+    primary: '#f9f7fc',
+    primaryDark: '#d6d4e0',
+    dark: '#2A2A2A',
+    darkLight: '#4A4A4A',
+    gray: '#E0E0E0',
+    text: '#1C1C1C',
+    textLight: '#757575',
+    textDark: '#000000',
+    textSecondary: '#64748B',
+    rose: '#e63946',
+    roseLight: '#f48fb1',
+    white: '#FFFFFF',
+    button: '#FFA500',
+    loading: '#8B7DF5',
+    green: '#e63946',
+    orange: '#FFA500',
+    background: '#FFFFFF',
+    surface: '#F8FAFC',
+    border: '#E2E8F0',
+    placeholder: '#94A3B8',
+    error: '#EF4444',
+    success: '#10B981',
+    gradient: {
+      primary: ['#4A90E2', '#357ABD'],
+      background: ['#E0EAFC', '#CFDEF3'],
+      accent: ['#F5A623', '#F7B84B'],
+    },
+  },
+  fonts: {
+    regular: '400',
+    medium: '500',
+    semibold: '600',
+    bold: '700',
+    extraBold: '800',
+  },
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 16,
+    lg: 24,
+    xl: 32,
+    xxl: 40,
+  },
+  radius: {
+    xs: 8,
+    sm: 10,
+    md: 12,
+    lg: 14,
+    xl: 16,
+    xxl: 20,
+    full: 9999,
+  },
+  shadows: {
+    sm: {
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 1,
+      },
+      shadowOpacity: 0.18,
+      shadowRadius: 1.0,
+      elevation: 1,
+    },
+    md: {
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+  },
+} as const;
+
+// Add type safety
+export type Theme = typeof theme; 
