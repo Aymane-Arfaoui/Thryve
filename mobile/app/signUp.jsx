@@ -14,8 +14,6 @@ const signUp = () => {
   return (
     <ScreenWrapper>
         <StatusBar />
-
-      <Text>SignUp</Text>
       <View style={styles.container}>
             <BackButton router={router}/>
 
