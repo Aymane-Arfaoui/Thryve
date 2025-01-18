@@ -52,6 +52,21 @@ export default function HomeScreen() {
 
   const chartWidth = Dimensions.get('window').width - wp(10) - hp(6); // Account for padding
 
+  // Update chart configs
+  const chartConfig = {
+    backgroundColor: theme.colors.white,
+    backgroundGradientFrom: theme.colors.white,
+    backgroundGradientTo: theme.colors.white,
+    decimalPlaces: 1,
+    color: (opacity = 1) => `rgba(67, 56, 202, ${opacity})`, // Indigo color
+    labelColor: () => theme.colors.textLight,
+    propsForDots: {
+      r: "6",
+      strokeWidth: "2",
+      stroke: theme.colors.primary
+    }
+  };
+
   return (
     <ScreenWrapper>
       <StatusBar style="dark" />
@@ -69,6 +84,27 @@ export default function HomeScreen() {
             Hi, {userData?.first_name || 'User'}!
           </Text>
 
+          <View style={styles.scoreCardContainer}>
+            <View style={[styles.scoreCard, { backgroundColor: '#4338ca' }]}> {/* Indigo-600 */}
+              <View style={styles.scoreHeader}>
+                <Text style={styles.scoreTitle}>Overall Score</Text>
+                <View style={styles.scoreBadge}>
+                  <Text style={styles.scoreBadgeText}>This Week</Text>
+                </View>
+              </View>
+              <Text style={styles.scoreValue}>92</Text>
+              <View style={styles.scoreFooter}>
+                <View style={styles.scoreChange}>
+                  <Text style={styles.scoreChangeIcon}>↑</Text>
+                  <Text style={styles.scoreChangeText}>8% from last week</Text>
+                </View>
+                <TouchableOpacity style={styles.scoreDetailsButton}>
+                  <Text style={styles.scoreDetailsText}>View Details</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
           <View style={styles.dashboardCard}>
             <Text style={styles.cardTitle}>Your Progress</Text>
             <View style={styles.chartContainer}>
@@ -78,14 +114,7 @@ export default function HomeScreen() {
                 height={hp(20)}
                 strokeWidth={16}
                 radius={32}
-                chartConfig={{
-                  backgroundColor: theme.colors.white,
-                  backgroundGradientFrom: theme.colors.white,
-                  backgroundGradientTo: theme.colors.white,
-                  decimalPlaces: 1,
-                  color: (opacity = 1) => `rgba(81, 150, 244, ${opacity})`,
-                  labelColor: () => theme.colors.textLight,
-                }}
+                chartConfig={chartConfig}
                 hideLegend={false}
                 style={styles.chart}
               />
@@ -114,19 +143,7 @@ export default function HomeScreen() {
                 data={weeklyData}
                 width={chartWidth}
                 height={hp(20)}
-                chartConfig={{
-                  backgroundColor: theme.colors.white,
-                  backgroundGradientFrom: theme.colors.white,
-                  backgroundGradientTo: theme.colors.white,
-                  decimalPlaces: 0,
-                  color: (opacity = 1) => `rgba(81, 150, 244, ${opacity})`,
-                  labelColor: () => theme.colors.textLight,
-                  propsForDots: {
-                    r: "6",
-                    strokeWidth: "2",
-                    stroke: theme.colors.primary
-                  }
-                }}
+                chartConfig={chartConfig}
                 bezier
                 style={styles.chart}
               />
@@ -232,7 +249,7 @@ const styles = StyleSheet.create({
     marginVertical: hp(1.5),
   },
   logoutButton: {
-    backgroundColor: theme.colors.error,
+    backgroundColor: '#dc2626', // Red-600
     marginHorizontal: 20,
     marginBottom: hp(4),
     padding: hp(2),
@@ -276,7 +293,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: hp(2.5),
     fontWeight: theme.fonts.bold,
-    color: theme.colors.primary,
+    color: '#4338ca', // Indigo-600
   },
   statLabel: {
     fontSize: hp(1.6),
@@ -290,5 +307,78 @@ const styles = StyleSheet.create({
   chart: {
     borderRadius: 16,
     marginVertical: hp(1),
+  },
+  scoreCardContainer: {
+    marginBottom: hp(3),
+  },
+  scoreCard: {
+    backgroundColor: '#4338ca', // Indigo-600
+    borderRadius: theme.radius.lg,
+    padding: hp(3),
+    shadowColor: theme.colors.dark,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  scoreHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: hp(2),
+  },
+  scoreTitle: {
+    fontSize: hp(2.2),
+    fontWeight: theme.fonts.bold,
+    color: theme.colors.white,
+  },
+  scoreBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: wp(3),
+    paddingVertical: hp(0.5),
+    borderRadius: theme.radius.full,
+  },
+  scoreBadgeText: {
+    color: theme.colors.white,
+    fontSize: hp(1.4),
+    fontWeight: theme.fonts.medium,
+  },
+  scoreValue: {
+    fontSize: hp(6),
+    fontWeight: theme.fonts.bold,
+    color: theme.colors.white,
+    marginBottom: hp(2),
+  },
+  scoreFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  scoreChange: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  scoreChangeIcon: {
+    color: '#10b981', // Emerald-500
+    fontSize: hp(2),
+    marginRight: wp(1),
+  },
+  scoreChangeText: {
+    color: theme.colors.white,
+    fontSize: hp(1.6),
+  },
+  scoreDetailsButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: wp(4),
+    paddingVertical: hp(1),
+    borderRadius: theme.radius.full,
+  },
+  scoreDetailsText: {
+    color: theme.colors.white,
+    fontSize: hp(1.6),
+    fontWeight: theme.fonts.medium,
   },
 });
