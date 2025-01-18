@@ -198,6 +198,23 @@ export default function HomeScreen() {
             </View>
 
             <View style={styles.dashboardCard}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardTitle}>Habits</Text>
+                <TouchableOpacity 
+                  onPress={() => router.push('/(main)/habits')}
+                  style={styles.viewAllButton}
+                >
+                  <Text style={styles.viewAllText}>View All</Text>
+                  <MaterialIcons name="arrow-forward" size={16} color={theme.colors.button} />
+                </TouchableOpacity>
+              </View>
+              
+              <Text style={styles.habitSubtext}>
+                Track your daily habits and build consistency
+              </Text>
+            </View>
+
+            <View style={styles.dashboardCard}>
               <Text style={styles.cardTitle}>Your Progress</Text>
               <View style={styles.chartContainer}>
                 <ProgressChart
@@ -455,5 +472,16 @@ const styles = StyleSheet.create({
     padding: wp(1),
     borderRadius: theme.radius.full,
     backgroundColor: theme.colors.gray + '20',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: hp(1),
+  },
+  habitSubtext: {
+    fontSize: hp(1.6),
+    color: theme.colors.textLight,
+    marginTop: hp(1),
   },
 });
