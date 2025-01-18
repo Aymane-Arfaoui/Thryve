@@ -6,7 +6,7 @@ import ScreenWrapper from '../../components/ScreenWrapper';
 import { StatusBar } from 'expo-status-bar';
 import { supabase } from '../../lib/supabase';
 import { theme } from '../../constants/theme';
-import { hp } from '../../helpers/common';
+import { hp, wp } from '../../helpers/common';
 import { getUserData } from '../../services/userService';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -42,14 +42,45 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <BackButton router={router} />
         </View>
+        
         <View style={styles.content}>
           <Text style={styles.welcomeText}>
             Hi, {userData?.first_name || 'User'}!
           </Text>
-          <Text style={styles.emailText}>
-            {userData?.email}
-          </Text>
+          
+          <View style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Full Name</Text>
+              <Text style={styles.value}>
+                {userData?.first_name} {userData?.last_name}
+              </Text>
+            </View>
+            
+            <View style={styles.divider} />
+            
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Email</Text>
+              <Text style={styles.value}>{userData?.email}</Text>
+            </View>
+            
+            <View style={styles.divider} />
+            
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Phone</Text>
+              <Text style={styles.value}>{userData?.phone_number || 'Not set'}</Text>
+            </View>
+            
+            <View style={styles.divider} />
+            
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Member Since</Text>
+              <Text style={styles.value}>
+                {new Date(userData?.created_at).toLocaleDateString()}
+              </Text>
+            </View>
+          </View>
         </View>
+
         <TouchableOpacity 
           style={styles.logoutButton}
           onPress={onLogout}
@@ -71,18 +102,46 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: wp(5),
+    paddingTop: hp(4),
   },
   welcomeText: {
     fontSize: hp(4),
     fontWeight: theme.fonts.bold,
     color: theme.colors.dark,
-    marginBottom: hp(1),
+    marginBottom: hp(4),
   },
-  emailText: {
-    fontSize: hp(2),
+  infoCard: {
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radius.lg,
+    padding: hp(3),
+    shadowColor: theme.colors.dark,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  infoRow: {
+    flexDirection: 'column',
+    paddingVertical: hp(1),
+  },
+  label: {
+    fontSize: hp(1.8),
     color: theme.colors.textLight,
+    marginBottom: hp(0.5),
+  },
+  value: {
+    fontSize: hp(2),
+    color: theme.colors.dark,
+    fontWeight: theme.fonts.medium,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: theme.colors.gray,
+    marginVertical: hp(1.5),
   },
   logoutButton: {
     backgroundColor: theme.colors.error,
