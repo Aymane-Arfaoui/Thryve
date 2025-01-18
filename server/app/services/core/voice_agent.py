@@ -1,16 +1,16 @@
-from server.app.models.context import ConversationContext
-from server.app.services.core.observers import VoiceAgentEvent, VoiceAgentObserver
-from server.app.services.core.response_engine import ChatMessageTypes, ResponseEngine
-from server.app.services.definitions.transcriptions import (
+from app.models.context import ConversationContext
+from app.services.core.observers import VoiceAgentEvent, VoiceAgentObserver
+from app.services.core.response_engine import ChatMessageTypes, ResponseEngine
+from app.services.definitions.transcriptions import (
     TranscriptionResult,
     TranscriptionService,
 )
-from server.app.services.definitions.voiceinterface import StreamingVoiceInterface
-from server.app.utils.misc import remove_trailing_punctuation
+from app.services.definitions.voiceinterface import StreamingVoiceInterface
+from app.utils.misc import remove_trailing_punctuation
 import json
-from utils.audio import AudioConverter
+from app.utils.audio import AudioConverter
 import asyncio
-
+import base64
 import re
 from typing import Any
 
@@ -40,10 +40,12 @@ class VoiceAgent:
             await observer.on_event(event, data)
 
     def prepare(self):
+
         self.stt_service.set_on_transcript_received(self.handle_transcription)
 
-        async def on_audio_generated(audio_bytes: bytes):
-            await self.notify_observers(VoiceAgentEvent.AUDIO_GENERATED, self.audio_converter.convert_mp3_to_b64mulaw(audio_bytes))
+
+        async def on_audio_generated(audio_b64: str):
+            await self.notify_observers(VoiceAgentEvent.AUDIO_GENERATED, base64.b64decode(audio_b64))
 
         self.voice_interface.on_audiogen_response_received(on_audio_generated)
 
@@ -99,32 +101,76 @@ class VoiceAgent:
             )
 
         if self.should_enable_user_speech(transcript):
-            self.voice_context.user_speaking = True
-            await self.notify_observers(VoiceAgentEvent.USER_SPEAKING, True)
 
-        if speech_ended:
-            self.voice_context.user_speaking = False
-            await self.generate_response(self.voice_context.current_transcript)
+            if self.voice_context.agent_speaking:
+                print("User Interrupted")
+                self.voice_interface.set_ignore_incoming_audio(True)
+                self.voice_context.interruption = True
 
+            if speech_ended:
+                print("Speech ended")
+                print("Current transcript: ", self.voice_context.current_transcript)
+                self.voice_context.interruption = False
+                self.voice_interface.set_ignore_incoming_audio(False)
+                self.voice_context.agent_speaking = True
+                await self.generate_response(self.voice_context.current_transcript)
+
+            
+        
     async def generate_response(self, input: str):
-        sentence_response_gen = self.response_engine.create_sentence_response_gen(
+
+        if not input:
+            return
+
+        print("All keyword args: ", {"state" : json.dumps(self.voice_context.call_state), **self.voice_context.const_keyword_args})
+
+
+        response_gen = self.response_engine.create_response_gen(
             input,
             **{"state" : json.dumps(self.voice_context.call_state), **self.voice_context.const_keyword_args}
         )
 
+        print("Sentence response gen: ", response_gen)
+
         agent_response = ""
 
-        async for sentence in sentence_response_gen:
-            if self.voice_context.user_speaking:
-                break
-            else:
-                await self.voice_interface.send_audio_request(sentence)
-                agent_response += sentence
+        FLUSH_THRESHOLD_WITH_COMMA = 8
+        FLUSH_FIRST_STREAM_THRESHOLD_WITH_COMMA = 1
+        FLUSH_THRESHOLD = 20
+        FLUSH_FIRST_STREAM_THRESHOLD = 8
 
+        response_to_be_flushed = []
+        first_stream_temp = True
+
+        async for text in response_gen:
+
+            if not text:
+                continue
+
+            if self.voice_context.interruption:
+                print("Interruption detected")
+                break
+
+            response_to_be_flushed.append(text)
+
+            if (any(char in text for char in ['.', '?', '!']) 
+                        or ',' in text and len(response_to_be_flushed) >= FLUSH_THRESHOLD_WITH_COMMA
+                        or ',' in text and first_stream_temp and len(response_to_be_flushed) >= FLUSH_FIRST_STREAM_THRESHOLD_WITH_COMMA
+                        or len(response_to_be_flushed) >= FLUSH_THRESHOLD
+                        or first_stream_temp and len(response_to_be_flushed) >= FLUSH_FIRST_STREAM_THRESHOLD):
+            
+                await self.voice_interface.send_audio_request(text, flush = True)
+                agent_response += text
+                response_to_be_flushed = []
+
+            else:
+                await self.voice_interface.send_audio_request(text, flush = False)
+
+        self.voice_context.agent_speaking = False
         self.response_engine.add_to_chat_history(agent_response, ChatMessageTypes.AI)
 
-    def put_raw_audio(self, audio_bytes: bytes):
-        self.stt_service.send_audio(audio_bytes)
+    async def put_raw_audio(self, audio_bytes: bytes):
+        await self.stt_service.send_audio(audio_bytes)
 
     async def start(self):
 

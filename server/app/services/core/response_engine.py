@@ -3,6 +3,11 @@ from langchain_community.vectorstores import VectorStore
 from enum import Enum
 from app.services.definitions.call_elements import CallElement
 from langchain_community.vectorstores import FAISS
+import asyncio
+from app.services.core.response_generators import create_vector_store
+from langchain_core.documents import Document
+import json
+from typing import AsyncIterator
 
 class ChatMessageTypes(Enum):
     HUMAN = "human"
@@ -20,6 +25,7 @@ class ResponseEngine(CallElement):
         self.leading_prompt = leading_prompt
         self.prompt_template = None
         self.retrieval_chain = None
+        self.chat_history = rg.ChatMessageHistory()
         
 
     def add_to_chat_history(self, message : str, role : ChatMessageTypes):
@@ -38,23 +44,38 @@ class ResponseEngine(CallElement):
             vector_store=self.vector_store,
             prompt_template=self.prompt_template
         )
-        self.chat_history = rg.ChatMessageHistory()
 
-    def create_sentence_response_gen(self, input, **kwargs):
+        print("Retrieval chain: ", self.retrieval_chain)
+        print("Prompt template: ", self.prompt_template)
+
+    async def create_response_gen(self, input, **kwargs) -> AsyncIterator[str]:
+        print("Creating response gen with input: ", input)
         response_gen = rg.get_response_stream(
             chain=self.retrieval_chain,
             user_input=input,
             chat_history=self.chat_history
         )
 
-        return rg.get_response_sentences(response_gen)
-
+        async for chunk in response_gen:
+            yield chunk.response
 
     # TODO: Add logic to load prompts from start data
-    def initialize_from_start_data(self, data : dict):
-        self.vector_store = FAISS.from_documents([])
-        self.system_prompt = "Be nice to the user"
-        self.leading_prompt = "You are a helpful assistant"    
+    async def initialize_from_start_data(self, data : dict):
+        self.vector_store = create_vector_store([Document(page_content="Hello")])
+        self.system_prompt = "Be nice to the user {context}"
+        self.leading_prompt = "You are a helpful assistant"
+        self.initialize_defaults()
+
+response_engine = ResponseEngine()  
+
+async def main():
+    await response_engine.initialize_from_start_data({})
+    sentence_response_gen = response_engine.create_response_gen("Hello", **{"state" : json.dumps({})})
+    async for sentence in sentence_response_gen:
+        print(sentence)
+
+asyncio.run(main())
+
 
 
     

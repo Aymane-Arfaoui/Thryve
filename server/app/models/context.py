@@ -5,7 +5,8 @@ from langchain_core.messages import HumanMessage
 @dataclass
 class ConversationContext:
     current_transcript : str = ""
-    user_speaking : bool = False
+    interruption : bool = False
+    agent_speaking : bool = False
     last_final_transcript : str = ""
     user_id : str = ""
     call_id : str = ""
