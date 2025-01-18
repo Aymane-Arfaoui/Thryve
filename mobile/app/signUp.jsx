@@ -22,7 +22,7 @@ export default function SignUp() {
     <ScreenWrapper>
       <StatusBar style="dark" />
       <View style={styles.container}>
-        <BackButton router={router}/>
+        <BackButton router={router} onPress={() => router.replace('welcome')}/>
 
         {/* Header */}
         <View style={styles.header}>
