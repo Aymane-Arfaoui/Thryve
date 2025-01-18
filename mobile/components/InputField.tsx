@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { View, TextInput, Text, StyleSheet, TextInputProps } from 'react-native';
 import { theme } from '../constants/theme';
 import { hp, wp } from '../helpers/common';
@@ -10,29 +10,32 @@ interface InputFieldProps extends TextInputProps {
   delay?: number;
 }
 
-export function InputField({ label, error, delay = 0, ...props }: InputFieldProps) {
-  return (
-    <Animated.View 
-      style={styles.container}
-      entering={SlideInRight.delay(delay).springify()}
-    >
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
-        style={[styles.input, error && styles.inputError]}
-        placeholderTextColor={theme.colors.textLight}
-        {...props}
-      />
-      {error && (
-        <Animated.Text 
-          style={styles.errorText}
-          entering={FadeIn}
-        >
-          {error}
-        </Animated.Text>
-      )}
-    </Animated.View>
-  );
-}
+export const InputField = forwardRef<TextInput, InputFieldProps>(
+  ({ label, error, delay = 0, ...props }, ref) => {
+    return (
+      <Animated.View 
+        style={styles.container}
+        entering={SlideInRight.delay(delay).springify()}
+      >
+        <Text style={styles.label}>{label}</Text>
+        <TextInput
+          ref={ref}
+          style={[styles.input, error && styles.inputError]}
+          placeholderTextColor={theme.colors.textLight}
+          {...props}
+        />
+        {error && (
+          <Animated.Text 
+            style={styles.errorText}
+            entering={FadeIn}
+          >
+            {error}
+          </Animated.Text>
+        )}
+      </Animated.View>
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   container: {
