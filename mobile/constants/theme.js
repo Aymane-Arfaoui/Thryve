@@ -1,11 +1,11 @@
 export const theme = {
     colors: {
-        primary: '#f9f7fc',
+        primary: '#007AFF',
         primaryDark: '#d6d4e0',
         dark: '#2A2A2A',
         darkLight: '#4A4A4A',
         gray: '#E0E0E0',
-        text: '#1C1C1C',
+        text: '#000000',
         textLight: '#757575',
         textDark: '#000000',
         rose: '#e63946',
@@ -15,6 +15,9 @@ export const theme = {
         loading: '#8B7DF5',
         green: 'e63946',
         orange: '#FFA500', // Added vibrant orange color
+        background: '#FFFFFF',
+        border: '#E5E5E5',
+        error: '#FF3B30',
     },
     fonts: {
         medium: '500',
