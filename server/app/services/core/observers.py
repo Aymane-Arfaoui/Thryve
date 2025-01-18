@@ -18,6 +18,7 @@ class Observer:
 class VoiceAgentEvent(Enum):
     AUDIO_GENERATED = "audio_generated"
     INTERRUPTED = "user_speaking"
+    
 class VoiceAgentObserver(Observer):
 
     def __init__(self):
