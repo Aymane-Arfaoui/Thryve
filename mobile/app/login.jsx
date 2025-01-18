@@ -16,6 +16,7 @@ export default function Login() {
 
   const handleLogin = () => {
     console.log('Logging in with:', email, password);
+    router.push('/name');
   };
 
   return (

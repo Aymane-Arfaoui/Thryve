@@ -16,6 +16,7 @@ export default function SignUp() {
 
   const handleSignUp = () => {
     console.log('Signing up with:', email, password);
+    router.push('/name');
   };
 
   return (
