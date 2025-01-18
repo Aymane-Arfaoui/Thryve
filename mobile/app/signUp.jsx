@@ -6,6 +6,8 @@ import { hp, wp } from '../helpers/common'
 import { theme } from '../constants/theme'
 import BackButton from '../components/BackButton'
 import { useRouter } from 'expo-router'
+// import LeftArrow from '../assets/icons/LeftArrow'
+// import Icon from '../assets/icons'
 
 const signUp = () => {
     const router = useRouter();
