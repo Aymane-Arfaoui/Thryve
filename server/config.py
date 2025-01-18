@@ -33,3 +33,5 @@ AZURE_MODELS  = {
         api_version="2023-03-15-preview"
     ),
 }
+
+DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
