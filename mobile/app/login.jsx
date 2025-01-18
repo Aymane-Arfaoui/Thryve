@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native'
+import React, { useState, useRef } from 'react'
 import ScreenWrapper from '../components/ScreenWrapper'
 import { StatusBar } from 'expo-status-bar'
 import { hp, wp } from '../helpers/common'
@@ -8,74 +8,81 @@ import BackButton from '../components/BackButton'
 import { useRouter } from 'expo-router'
 import { FormInput } from '../components/FormInput'
 import { MaterialIcons } from '@expo/vector-icons'
+import { KeyboardAwareView } from '../components/KeyboardAwareView'
 
 export default function Login() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const emailRef = useRef("")
+  const passwordRef = useRef("")
+  const [loading, setLoading] = useState(false)
 
   const handleLogin = () => {
-    console.log('Logging in with:', email, password);
+    console.log('Logging in with:', emailRef.current, passwordRef.current);
     router.push('/name');
   };
 
   return (
     <ScreenWrapper>
       <StatusBar style="dark" />
-      <View style={styles.container}>
-        <BackButton router={router} onPress={() => router.replace('welcome')}/>
+      <KeyboardAwareView>
+        <View style={styles.container}>
+          <BackButton router={router} onPress={() => router.replace('welcome')}/>
 
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Continue your journey with Thryve</Text>
-        </View>
-
-        {/* Form Section */}
-        <View style={styles.formSection}>
-          <View style={styles.form}>
-            <FormInput
-              icon={<MaterialIcons name="email" size={24} color={theme.colors.textLight} />}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <FormInput
-              icon={<MaterialIcons name="lock" size={24} color={theme.colors.textLight} />}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-            
-            <TouchableOpacity 
-              style={styles.loginButton} 
-              onPress={handleLogin}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.loginButtonText}>Log In</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.forgotPassword}
-              onPress={() => router.push('/forgot-password')}
-            >
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-            </TouchableOpacity>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Welcome Back</Text>
+            <Text style={styles.subtitle}>Continue your journey with Thryve</Text>
           </View>
-        </View>
 
-        {/* Footer */}
-        <TouchableOpacity 
-          style={styles.footer}
-          onPress={() => router.push('/signUp')}
-        >
-          <Text style={styles.footerText}>New to Thryve? </Text>
-          <Text style={[styles.footerText, styles.footerLink]}>Sign up</Text>
-        </TouchableOpacity>
-      </View>
+          {/* Form Section */}
+          <View style={styles.formSection}>
+            <View style={styles.form}>
+              <FormInput
+                icon={<MaterialIcons name="email" size={24} color={theme.colors.textLight} />}
+                placeholder="Email"
+                onChangeText={(text) => emailRef.current = text}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                returnKeyType="next"
+              />
+              <FormInput
+                icon={<MaterialIcons name="lock" size={24} color={theme.colors.textLight} />}
+                placeholder="Password"
+                onChangeText={(text) => passwordRef.current = text}
+                secureTextEntry
+                returnKeyType="done"
+              />
+              
+              <TouchableOpacity 
+                style={styles.loginButton} 
+                onPress={handleLogin}
+                activeOpacity={0.8}
+                disabled={loading}
+              >
+                <Text style={styles.loginButtonText}>
+                  {loading ? 'Logging in...' : 'Log In'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.forgotPassword}
+                onPress={() => router.push('/forgot-password')}
+              >
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Footer */}
+          <TouchableOpacity 
+            style={styles.footer}
+            onPress={() => router.push('/signUp')}
+          >
+            <Text style={styles.footerText}>New to Thryve? </Text>
+            <Text style={[styles.footerText, styles.footerLink]}>Sign up</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAwareView>
     </ScreenWrapper>
   )
 }

@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router'
 import { FormInput } from '../components/FormInput'
 import { MaterialIcons } from '@expo/vector-icons'
 import { supabase } from '../lib/supabase'
+import { KeyboardAwareView } from '../components/KeyboardAwareView'
 
 export default function SignUp() {
   const router = useRouter();
@@ -51,58 +52,63 @@ export default function SignUp() {
   return (
     <ScreenWrapper>
       <StatusBar style="dark" />
-      <View style={styles.container}>
-        <BackButton router={router} onPress={() => router.replace('welcome')}/>
+      <KeyboardAwareView>
+        <View style={styles.container}>
+          <BackButton router={router} onPress={() => router.replace('welcome')}/>
 
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Thryve</Text>
-          <Text style={styles.subtitle}>Your journey to a better you starts here</Text>
-        </View>
-
-        {/* Form Section */}
-        <View style={styles.formSection}>
-          <View style={styles.welcomeContainer}>
-            <Text style={styles.welcomeText}>Let's</Text>
-            <Text style={styles.welcomeText}>Get Started</Text>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Thryve</Text>
+            <Text style={styles.subtitle}>Your journey to a better you starts here</Text>
           </View>
 
-          <View style={styles.form}>
-            <FormInput
-              icon={<MaterialIcons name="email" size={24} color={theme.colors.textLight} />}
-              placeholder="Email"
-              onChangeText={(text) => emailRef.current = text}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <FormInput
-              icon={<MaterialIcons name="lock" size={24} color={theme.colors.textLight} />}
-              placeholder="Password"
-              onChangeText={(text) => passwordRef.current = text}
-              secureTextEntry
-            />
-            
-            <TouchableOpacity 
-              style={styles.signUpButton} 
-              onPress={handleSignUp}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.signUpButtonText}>
-                {loading ? 'Creating Account...' : 'Start Thryving'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+          {/* Form Section */}
+          <View style={styles.formSection}>
+            <View style={styles.welcomeContainer}>
+              <Text style={styles.welcomeText}>Let's</Text>
+              <Text style={styles.welcomeText}>Get Started</Text>
+            </View>
 
-        {/* Footer */}
-        <TouchableOpacity 
-          style={styles.footer}
-          onPress={() => router.push('/login')}
-        >
-          <Text style={styles.footerText}>Already Thryving? </Text>
-          <Text style={[styles.footerText, styles.footerLink]}>Log in</Text>
-        </TouchableOpacity>
-      </View>
+            <View style={styles.form}>
+              <FormInput
+                icon={<MaterialIcons name="email" size={24} color={theme.colors.textLight} />}
+                placeholder="Email"
+                onChangeText={(text) => emailRef.current = text}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                returnKeyType="next"
+              />
+              <FormInput
+                icon={<MaterialIcons name="lock" size={24} color={theme.colors.textLight} />}
+                placeholder="Password"
+                onChangeText={(text) => passwordRef.current = text}
+                secureTextEntry
+                returnKeyType="done"
+              />
+              
+              <TouchableOpacity 
+                style={styles.signUpButton} 
+                onPress={handleSignUp}
+                activeOpacity={0.8}
+                disabled={loading}
+              >
+                <Text style={styles.signUpButtonText}>
+                  {loading ? 'Creating Account...' : 'Start Thryving'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Footer */}
+          <TouchableOpacity 
+            style={styles.footer}
+            onPress={() => router.push('/login')}
+          >
+            <Text style={styles.footerText}>Already Thryving? </Text>
+            <Text style={[styles.footerText, styles.footerLink]}>Log in</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAwareView>
     </ScreenWrapper>
   )
 }
