@@ -1,4 +1,5 @@
 import re
+import langchain
 
 def setup_evaluation(transcript: str):
     # Extract goals
@@ -14,7 +15,6 @@ Goal 2: [goal 2]
 Daily Action 1: [daily action 1]
 Daily Action 2: [daily action 2]
 """
-
 
 
 sample_response = """Goal 1: Get in better shape (lose weight, build muscle, and improve overall health)

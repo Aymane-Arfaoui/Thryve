@@ -16,8 +16,8 @@ Start with these questions, then continue the conversation:
     return prompt
 
 
-def morning_call_re():
-    
+def morning_call_re(long_term_goals: list[str]):
+    goal_1, goal_2 = long_term_goals['goal1'], long_term_goals['goal2']
     # How was your sleep today?
     # Find out when user wants to have the next check-in call
     pass
