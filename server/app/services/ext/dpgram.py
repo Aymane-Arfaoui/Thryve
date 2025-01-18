@@ -2,10 +2,13 @@ from deepgram import (
     DeepgramClient,
     DeepgramClientOptions,
     LiveTranscriptionEvents,
+    LiveResultResponse,
     LiveOptions,
 )
 from config import DEEPGRAM_API_KEY
-
+from abc import ABC
+from typing import NamedTuple
+from app.services.definitions.transcriptions import TranscriptionResult
 
 
 DEEPGRAM_CLIENT = DeepgramClient(api_key=DEEPGRAM_API_KEY,
@@ -17,8 +20,19 @@ class DeepgramTranscriptionService():
         self.options = self._get_default_stream_options()
         self.dg_connection = DEEPGRAM_CLIENT.listen.asyncwebsocket.v("1")
 
-    def set_message_handler(self, message : LiveTranscriptionEvents, async_func : callable):
-        self.dg_connection.on(message, async_func)
+    def set_on_transcript_received(self, func : callable):
+        self.dg_connection.on(LiveTranscriptionEvents.Transcript, 
+                              lambda result: func(result, self.transcription_parser))
+
+    def transcription_parser(self, result : LiveResultResponse):
+        transcript = result.channel.alternatives[0].transcript
+        is_final = result.is_final
+        speech_final = result.speech_final
+        confidence = result.channel.alternatives[0].confidence < 0.67
+    
+        return TranscriptionResult(transcript, is_final, speech_final, confidence)
+
+
 
     async def start_connection(self):
         await self.dg_connection.start(self.options)
@@ -43,3 +57,7 @@ class DeepgramTranscriptionService():
                     interim_results=True,
                 )
         return options
+
+    
+    
+
