@@ -7,6 +7,7 @@ from enum import Enum
 from dataclasses import dataclass
 import re
 from app.utils.misc import remove_trailing_punctuation
+from server.app.services.core.observers import VoiceAgentEvent, VoiceAgentObserver
 
 class ChatMessageTypes(Enum):
     HUMAN = "human"
@@ -58,22 +59,6 @@ class VoiceContext:
     current_transcript : str = ""
     user_speaking : bool = False
     last_final_transcript : str = ""
-
-
-class VoiceAgentEvent(Enum):
-    AUDIO_GENERATED = "audio_generated"
-
-class VoiceAgentObserver:
-
-    def __init__(self):
-        self.events_map : dict[VoiceAgentEvent, callable] = {}
-
-    def add_event_listener(self, event : VoiceAgentEvent, func : callable):
-        self.events_map[event] = func
-
-    def on_event(self, event : VoiceAgentEvent, data : Any):
-        if event in self.events_map:
-            self.events_map[event](data)
 
 
 class VoiceAgent:
