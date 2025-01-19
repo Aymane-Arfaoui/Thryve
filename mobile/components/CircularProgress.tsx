@@ -8,13 +8,15 @@ interface CircularProgressProps {
   radius: number;
   strokeWidth: number;
   color: string;
+  backgroundColor?: string;
 }
 
 export function CircularProgress({ 
   value, 
   radius, 
   strokeWidth, 
-  color = theme.colors.primary 
+  color = theme.colors.primary,
+  backgroundColor = theme.colors.gray + '20'
 }: CircularProgressProps) {
   const circumference = 2 * Math.PI * radius;
   const progressValue = Math.min(100, Math.max(0, value));
@@ -28,7 +30,7 @@ export function CircularProgress({
           cx={radius}
           cy={radius}
           r={radius - strokeWidth / 2}
-          stroke={theme.colors.gray + '20'}
+          stroke={backgroundColor}
           strokeWidth={strokeWidth}
           fill="none"
         />

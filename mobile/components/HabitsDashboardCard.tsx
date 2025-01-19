@@ -59,7 +59,7 @@ export function HabitsDashboardCard({ onPress }) {
           <MaterialIcons 
             name="repeat" 
             size={24} 
-            color={theme.colors.primary}
+            color={theme.colors.dark}
           />
           <Text style={styles.title}>Habits Overview</Text>
         </View>
@@ -68,7 +68,7 @@ export function HabitsDashboardCard({ onPress }) {
           <MaterialIcons 
             name="chevron-right" 
             size={20} 
-            color={theme.colors.primary}
+            color={theme.colors.dark}
           />
         </View>
       </View>
@@ -79,7 +79,8 @@ export function HabitsDashboardCard({ onPress }) {
             value={stats.weeklyCompletion} 
             radius={wp(10)}
             strokeWidth={wp(1.5)}
-            color={theme.colors.primary}
+            color={theme.colors.success}
+            backgroundColor={theme.colors.success + '15'}
           />
           <View style={styles.statTextContainer}>
             <Text style={styles.statValue}>{stats.weeklyCompletion}%</Text>
@@ -184,7 +185,7 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     fontSize: hp(1.6),
-    color: theme.colors.primary,
+    color: theme.colors.dark,
     fontWeight: theme.fonts.medium,
   },
   statsContainer: {

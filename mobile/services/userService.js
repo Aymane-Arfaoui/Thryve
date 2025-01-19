@@ -1,5 +1,4 @@
 import {supabase} from '../lib/supabase';
-// import { doc, getDoc } from 'firebase/firestore';
 
 export const getUserData = async (userId) => {
     try{
@@ -57,15 +56,12 @@ export const initiateCall = async (userId, callBotId) => {
             return {success: false, msg: 'Failed to get user data'};
         }
 
-        // console.log(goalsData);
     
         const callPayload = {
             target_phone_number: userData.data.phone_number, 
             custom_params: {
                 user_id: userData.data.id,
                 first_name: userData.data.first_name 
-                // goals : ,
-                // action_items: ,
             }
         };
 

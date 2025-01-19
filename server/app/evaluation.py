@@ -80,12 +80,8 @@ def setup_up_call_update(transcript: str, user_id: str):
     firebase_db.create_long_term_goals(user_id, [ltg_1_description, ltg_2_description])
 
     # Update daily actions
-    firebase_db.add_daily_action(user_id, action_title_1, action_1_description)
-    firebase_db.add_daily_action(user_id, action_title_2, action_2_description)
-
-
-
-
+    firebase_db.add_habit(user_id, action_title_1, action_1_description)
+    firebase_db.add_habit(user_id, action_title_2, action_2_description)
 
 
 
