@@ -43,12 +43,12 @@ export function useUserScore() {
     // Calculate task score
     const totalTaskPoints = activeTasks.reduce((total, task) => {
       const priority = task.priority?.toLowerCase() || 'low';
-      return total + taskPriorityPoints[priority];
+      return total + taskPriorityPoints[priority as keyof typeof taskPriorityPoints];
     }, 0);
 
     const earnedTaskPoints = completedTasks.reduce((total, task) => {
       const priority = task.priority?.toLowerCase() || 'low';
-      return total + taskPriorityPoints[priority];
+      return total + taskPriorityPoints[priority as keyof typeof taskPriorityPoints];
     }, 0);
 
     const taskScore = totalTaskPoints > 0 

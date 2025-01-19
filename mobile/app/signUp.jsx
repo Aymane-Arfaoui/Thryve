@@ -89,11 +89,9 @@ export default function SignUpScreen() {
           'Account created but there was an issue setting up your profile. Please contact support.'
         );
       }
-
-      router.push('/login');
-
       await initiateCall(data.user.id, "setup_bot")
-      // Schedule a call for the user
+
+      router.push('/login');      // Schedule a call for the user
       
       
     } catch (error) {
