@@ -67,7 +67,7 @@ export const initiateCall = async (userId, callBotId) => {
         };
 
         // Send the request to your backend
-        const response = await fetch('https://thryve-f227a234ead5.herokuapp.com/dispatch', {
+        const response = await fetch('ttps://a226-34-130-234-203.ngrok-free.app/dispatch', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
