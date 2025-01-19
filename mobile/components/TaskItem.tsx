@@ -5,15 +5,18 @@ import { hp, wp } from '../helpers/common';
 import { MaterialIcons } from '@expo/vector-icons';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 
-interface TaskItemProps {
-  name: string;
-  timeInfo: string;
-  timeLabel: string;
-  onComplete: () => void;
+interface TaskProps {
+  task: {
+    id: string;
+    name: string;
+    dueDate: string;
+    priority: string;
+    completed: boolean;
+  };
 }
 
-export function TaskItem({ name, timeInfo, timeLabel, onComplete }: TaskItemProps) {
-  const isGoal = timeLabel === 'Duration';
+export function TaskItem({ task }: TaskProps) {
+  const isGoal = task.priority === 'Duration';
   
   const renderRightActions = (
     progress: Animated.AnimatedInterpolation<number>,
@@ -26,7 +29,7 @@ export function TaskItem({ name, timeInfo, timeLabel, onComplete }: TaskItemProp
 
     return (
       <Animated.View style={[styles.rightAction, { transform: [{ translateX: trans }] }]}>
-        <TouchableOpacity onPress={onComplete} style={styles.completeButton}>
+        <TouchableOpacity onPress={() => {}} style={styles.completeButton}>
           <MaterialIcons name="check-circle" size={24} color={theme.colors.white} />
           <Text style={styles.completeText}>Complete</Text>
         </TouchableOpacity>
@@ -47,7 +50,7 @@ export function TaskItem({ name, timeInfo, timeLabel, onComplete }: TaskItemProp
       >
         <View style={styles.content}>
           <View style={styles.mainContent}>
-            <Text style={styles.taskName} numberOfLines={1}>{name}</Text>
+            <Text style={styles.taskName} numberOfLines={1}>{task.name}</Text>
             <View style={styles.timeContainer}>
               <MaterialIcons 
                 name={isGoal ? 'track-changes' : 'event'} 
@@ -55,13 +58,13 @@ export function TaskItem({ name, timeInfo, timeLabel, onComplete }: TaskItemProp
                 color={theme.colors.textLight}
               />
               <Text style={styles.timeInfo}>
-                {timeLabel}: {timeInfo}
+                {task.priority}: {task.dueDate}
               </Text>
             </View>
           </View>
           
           <TouchableOpacity 
-            onPress={onComplete}
+            onPress={() => {}}
             style={styles.completeIconButton}
           >
             <MaterialIcons 

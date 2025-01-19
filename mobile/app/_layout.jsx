@@ -4,6 +4,7 @@ import { Stack, useRouter } from 'expo-router'
 import { AuthProvider, useAuth } from '../contexts/AuthContext'
 import { useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { FirebaseProvider } from '../lib/firebase/context'
 
 LogBox.ignoreLogs([
   'Warning: TNodeChildrenRenderer', 
@@ -13,9 +14,11 @@ LogBox.ignoreLogs([
 
 const _layout = () => {
   return (
-    <AuthProvider>
-      <MainLayout />
-    </AuthProvider>
+    <FirebaseProvider>
+      <AuthProvider>
+        <MainLayout />
+      </AuthProvider>
+    </FirebaseProvider>
   );
 }
 
