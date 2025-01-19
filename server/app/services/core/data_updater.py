@@ -7,6 +7,5 @@ class DataUpdateService:
         self.context = context
 
 
-    async def update_data(self, 
-                          final_chat_history : rg.ChatMessageHistory):
+    async def update_data(self, final_chat_history : rg.ChatMessageHistory):
         pass

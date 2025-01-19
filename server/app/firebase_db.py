@@ -3,7 +3,7 @@ from firebase_admin import credentials, firestore
 from firebase_admin import storage
 import json
 
-cred = credentials.Certificate("server/app/firebase_creds.json")
+cred = credentials.Certificate("app/firebase_creds.json")
 firebase_admin.initialize_app(cred)
 
 
@@ -29,6 +29,31 @@ def create_document_in_bucket(user_id: str, long_term_goals: list):
 
 # response = create_document_in_bucket(USER_ID, LONG_TERM_GOALS)
 # print(response)
+
+# Create or overwrite long term goals
+# Function to create or update only the long-term goals for a user
+def create_long_term_goals(user_id: str, long_term_goals: list):
+    # Get Firestore client
+    db = firestore.client()
+    collection_name = "user_goals"
+
+    # Document data for long-term goals
+    document_data = {
+        "long_term_goals": long_term_goals
+    }
+
+    # Create or update the long-term goals for the specified user
+    doc_ref = db.collection(collection_name).document(user_id)
+    doc_ref.set(document_data, merge=True)  # 'merge=True' ensures only the specified fields are updated
+
+    return f"Long-term goals for user_id '{user_id}' created or updated successfully in '{collection_name}' collection."
+
+# USER_ID = "example_user_id"
+# LONG_TERM_GOALS = ["Cooked Chat", "Start"]
+# response = create_long_term_goals(USER_ID, LONG_TERM_GOALS)
+# print(response)
+
+
 
 # Function to get the user's long term goals
 def get_long_term_goals(user_id: str):
