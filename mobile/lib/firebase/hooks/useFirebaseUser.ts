@@ -22,4 +22,4 @@ export function useFirebaseUser() {
   };
 
   return { createUserDocument };
-} 
+}

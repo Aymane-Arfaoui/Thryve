@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, ScrollView, Platform, Modal, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, ScrollView, Platform, Modal, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import BackButton from '../../components/BackButton';
 import ScreenWrapper from '../../components/ScreenWrapper';
@@ -52,7 +52,7 @@ export default function HomeScreen() {
         userData: userData
       });
 
-      const result = await initiateCall(userData.id);
+      const result = await initiateCall(userData.id, "day_call_bot");
 
       if (result.success) {
         console.log('Call initiated successfully:', result.data);
@@ -138,6 +138,51 @@ export default function HomeScreen() {
       setRefreshing(false);
     }
   }, [user, fetchUserData, refreshTasks]);
+
+  const fetchPrediction = async () => {
+    setLoading(true);
+    try {
+      const result = await getPrediction();
+      if (result.success) {
+        setPrediction(result.data);
+      } else {
+        console.error('Failed to get prediction:', result.msg);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPrediction();
+  }, []);
+
+  const renderPrediction = () => {
+    if (loading) return <ActivityIndicator size="large" />;
+    if (!prediction) return null;
+
+    const riskLevel = prediction.probability > 0.7 ? 'High' : 
+                     prediction.probability > 0.3 ? 'Medium' : 'Low';
+    const riskColor = prediction.probability > 0.7 ? '#FF4444' : 
+                     prediction.probability > 0.3 ? '#FFBB33' : '#00C851';
+
+    return (
+      <View style={styles.predictionContainer}>
+        <Text style={styles.predictionTitle}>Goal Progress Prediction</Text>
+        <Text style={[styles.riskLevel, { color: riskColor }]}>
+          Risk Level: {riskLevel}
+        </Text>
+        <Text style={styles.probability}>
+          Probability: {(prediction.probability * 100).toFixed(1)}%
+        </Text>
+        <Text style={styles.date}>
+          Prediction for: {prediction.prediction_date}
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <ScreenWrapper>
@@ -360,6 +405,8 @@ export default function HomeScreen() {
         onClose={() => setIsTaskModalVisible(false)}
         onSave={handleSaveTask}
       />
+
+      {renderPrediction()}
     </ScreenWrapper>
   );
 }
@@ -391,7 +438,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: wp(5),
     paddingTop: hp(4),
-    paddingBottom: hp(12), // Increased to prevent overlap with bottom button
+    paddingBottom: Platform.OS === 'ios' ? hp(12) : hp(10),
   },
   infoCard: {
     backgroundColor: theme.colors.white,
@@ -683,5 +730,35 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontSize: hp(1.6),
     fontWeight: theme.fonts.medium,
+  },
+  predictionContainer: {
+    padding: 15,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    margin: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  predictionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  riskLevel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 5,
+  },
+  probability: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 5,
+  },
+  date: {
+    fontSize: 14,
+    color: '#666',
   },
 });

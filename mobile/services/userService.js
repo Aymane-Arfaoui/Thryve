@@ -1,4 +1,5 @@
 import {supabase} from '../lib/supabase';
+// import { doc, getDoc } from 'firebase/firestore';
 
 export const getUserData = async (userId) => {
     try{
@@ -20,16 +21,43 @@ export const getUserData = async (userId) => {
     }
 }
 
-// fucntion to send data to backend to initiate call
-export const initiateCall = async (userId) => {
+// // Separate function to get user goals and actions
+// const getUserGoalsAndActions = async (db, userId) => {
+//     try {
+//         const userRef = doc(db, 'user_goals', userId);
+//         const userDoc = await getDoc(userRef);
+        
+//         if (userDoc.exists()) {
+//             const data = userDoc.data();
+//             return {
+//                 goals: data.long_term_goals || [],
+//                 actions: (data.tasks || []).map(task => task.name),
+//                 success: true
+//             };
+//         }
+//         return { goals: [], actions: [], success: false };
+//     } catch (error) {
+//         console.error('Error getting goals and actions:', error);
+//         return { goals: [], actions: [], success: false };
+//     }
+// };
+
+export const BotIds = {
+    MORNING_BOT: 'morning_bot',
+    SETUP_BOT: 'setup_bot', 
+    DAY_CALL_BOT: 'day_call_bot'
+};
+
+// callBotId is either morning_bot, setup_bot, or day_call_bot
+export const initiateCall = async (userId, callBotId) => {
     try {
         const userData = await getUserData(userId);
-        const userGoals = await getUserGoals(userId);
-        
+
         if (!userData.success) {
             return {success: false, msg: 'Failed to get user data'};
         }
 
+        // console.log(goalsData);
     
         const callPayload = {
             target_phone_number: userData.data.phone_number, 
