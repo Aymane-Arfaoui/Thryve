@@ -60,7 +60,7 @@ Call Time: 13:00"""
 
 
 # Function to create a user
-def create_user(transcript: str, user_id: str):
+def setup_up_call_update(transcript: str, user_id: str):
     # Extract goals and actions
     goals_ai_extraction = setup_evaluation(transcript)
     goals_and_actions = extract_goals_and_actions(goals_ai_extraction)
@@ -82,6 +82,11 @@ def create_user(transcript: str, user_id: str):
     # Update daily actions
     firebase_db.add_daily_action(user_id, action_title_1, action_1_description)
     firebase_db.add_daily_action(user_id, action_title_2, action_2_description)
+
+
+
+
+
 
 
 
