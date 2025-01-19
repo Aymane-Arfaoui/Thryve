@@ -18,7 +18,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
 
 export function useFirebase() {
   const context = useContext(FirebaseContext);
-  if (context === undefined) {
+  if (!context || !context.db) {
     throw new Error('useFirebase must be used within a FirebaseProvider');
   }
   return context;
