@@ -130,7 +130,7 @@ class VoiceAgent:
 
         response_gen = self.response_engine.create_response_gen(
             input,
-            **{"state" : json.dumps(self.voice_context.call_state), **self.voice_context.const_keyword_args}
+            **{"state" : self.voice_context.call_state, **self.voice_context.const_keyword_args}
         )
 
         print("Sentence response gen: ", response_gen)
@@ -138,9 +138,9 @@ class VoiceAgent:
         agent_response = ""
 
         FLUSH_THRESHOLD_WITH_COMMA = 8
-        FLUSH_FIRST_STREAM_THRESHOLD_WITH_COMMA = 1
+        FLUSH_FIRST_STREAM_THRESHOLD_WITH_COMMA = 4
         FLUSH_THRESHOLD = 20
-        FLUSH_FIRST_STREAM_THRESHOLD = 8
+        FLUSH_FIRST_STREAM_THRESHOLD = 10
 
         response_to_be_flushed = []
         first_stream_temp = True
@@ -164,6 +164,7 @@ class VoiceAgent:
             
                 await self.voice_interface.send_audio_request(text, flush = True)
                 agent_response += text
+                first_stream_temp = False
                 response_to_be_flushed = []
 
             else:

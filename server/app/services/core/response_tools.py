@@ -206,5 +206,4 @@ async def get_response_sentences(
     except Exception as e:
         print("Error: ", e)
         raise e
-    
 

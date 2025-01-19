@@ -58,11 +58,6 @@ async def call_handler(request: web.Request):
     async def finalize_call(_):
         await data_update_service.update_data(response_engine.chat_history)
 
-    async def say_first_response():
-        await voice_agent.generate_response("Greet me now.")
-
-    call_observer.add_event_listener(CallEvent.CALL_STARTED, say_first_response)
-    
     call_observer.add_event_listener(
         CallEvent.CALL_STARTED, call_initializer.initialize_call
     )
