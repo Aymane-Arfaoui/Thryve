@@ -22,7 +22,7 @@ export default function HabitsScreen() {
     try {
       const result = await completeHabit(habitId, dateStr);
       
-      if (result.completed) {
+      if (result.completed) { 
         Toast.show({
           type: 'success',
           text1: 'Habit completed!',
