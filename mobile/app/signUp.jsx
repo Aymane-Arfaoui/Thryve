@@ -10,8 +10,6 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { theme } from '../constants/theme';
 import { supabase } from '../lib/supabase';
 import { useFirebaseUser } from '../lib/firebase/hooks/useFirebaseUser';
-import { initiateCall } from '../services/userService';
-
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -89,17 +87,17 @@ export default function SignUpScreen() {
           'Account created but there was an issue setting up your profile. Please contact support.'
         );
       }
+
       await initiateCall(data.user.id, "setup_bot")
 
-      router.push('/login');      // Schedule a call for the user
-      
+      router.push('/login');
       
     } catch (error) {
       Alert.alert('Error', 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
-  }; 
+  };
 
   return (
     <ScreenWrapper>
