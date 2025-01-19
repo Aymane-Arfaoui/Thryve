@@ -21,10 +21,10 @@ export const getUserData = async (userId) => {
 }
 
 // fucntion to send data to backend to initiate call
-
 export const initiateCall = async (userId) => {
     try {
         const userData = await getUserData(userId);
+        const userGoals = await getUserGoals(userId);
         
         if (!userData.success) {
             return {success: false, msg: 'Failed to get user data'};
@@ -36,6 +36,8 @@ export const initiateCall = async (userId) => {
             custom_params: {
                 user_id: userData.data.id,
                 first_name: userData.data.first_name 
+                // goals : ,
+                // action_items: ,
             }
         };
 

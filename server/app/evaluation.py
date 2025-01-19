@@ -1,5 +1,5 @@
 import re
-import firebase_db
+import app.firebase_db as firebase_db
 from app.services.ext.azure_ai import get_llm
 from config import AzureModels
 
@@ -77,7 +77,7 @@ def setup_up_call_update(transcript: str, user_id: str):
     action_title_2 = extract_action_name(action_2_description).replace('"', '')
 
     # Update long term goals
-    firebase_db.create_long_term_goals(user_id, ltg_1_description, ltg_2_description)
+    firebase_db.create_long_term_goals(user_id, [ltg_1_description, ltg_2_description])
 
     # Update daily actions
     firebase_db.add_daily_action(user_id, action_title_1, action_1_description)
