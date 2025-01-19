@@ -34,6 +34,36 @@ export default function HomeScreen() {
     }
   };
 
+  const handleTestCall = async () => {
+    try {
+      console.log('Current userData:', userData);
+
+      if (!userData?.id) {
+        console.error('No user ID found in userData');
+        Alert.alert('Error', 'User data not found');
+        return;
+      }
+
+      console.log('Initiating call with userData:', {
+        userId: userData.id,
+        userData: userData
+      });
+
+      const result = await initiateCall(userData.id);
+
+      if (result.success) {
+        console.log('Call initiated successfully:', result.data);
+        Alert.alert('Success', 'Call initiated!');
+      } else {
+        console.error('Failed to initiate call:', result.msg);
+        Alert.alert('Error', 'Failed to start call');
+      }
+    } catch (error) {
+      console.error('Error in handleTestCall:', error);
+      Alert.alert('Error', 'Something went wrong');
+    }
+  };
+
   useEffect(() => {
     fetchUserData();
   }, [user]);
