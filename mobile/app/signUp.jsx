@@ -101,7 +101,7 @@ export default function SignUpScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }; 
 
   return (
     <ScreenWrapper>
