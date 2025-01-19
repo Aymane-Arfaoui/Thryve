@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '../constants/theme';
 import { hp, wp } from '../helpers/common';
@@ -8,69 +8,43 @@ import { format, addDays } from 'date-fns';
 import { startOfWeek } from 'date-fns/startOfWeek';
 import { HabitCalendarModal } from './HabitCalendarModal';
 import { HabitAnalyticsModal } from './HabitAnalyticsModal';
-import { PopupMenu } from './PopupMenu';
-import Toast from 'react-native-toast-message';
 
-const isDateInFrequency = (date, frequency) => {
-  const dayId = format(date, 'eee').toLowerCase();
-  return frequency.type === 'daily' || 
-         (frequency.type === 'weekly' && frequency.days.includes(dayId));
-};
-
-function calculateStreak(progress, frequency) {
+function calculateStreak(progress) {
   const today = new Date();
   let currentStreak = 0;
   let date = today;
-  let lastCompletedDate = null;
+  let isStreakActive = false;
 
+  // Check if today is completed
   const todayStr = format(today, 'yyyy-MM-dd');
   const yesterdayStr = format(addDays(today, -1), 'yyyy-MM-dd');
   
-  const isToday = isDateInFrequency(today, frequency);
-  const isYesterday = isDateInFrequency(addDays(today, -1), frequency);
-
-  // Find the last required day before today
-  let lastRequiredDay = today;
-  while (lastRequiredDay >= addDays(today, -30)) {
-    if (isDateInFrequency(lastRequiredDay, frequency)) {
-      const dateStr = format(lastRequiredDay, 'yyyy-MM-dd');
-      // If we found a completed day, this is our streak start
-      if (progress[dateStr]?.completed) {
-        lastCompletedDate = lastRequiredDay;
-        break;
-      }
-      // If we found an uncompleted required day that isn't today, streak is broken
-      if (lastRequiredDay < today && !progress[dateStr]?.completed) {
-        return 0;
-      }
-      // If it's today and not completed, keep looking back
-      if (lastRequiredDay === today && !progress[dateStr]?.completed) {
-        lastRequiredDay = addDays(lastRequiredDay, -1);
-        continue;
-      }
-    }
-    lastRequiredDay = addDays(lastRequiredDay, -1);
+  // Case 1: Today is completed
+  if (progress[todayStr]?.completed) {
+    isStreakActive = true;
+    currentStreak = 0;
+    date = addDays(today, -1);
+  // Case 2: Today not completed but yesterday was (streak still alive)
+  } else if (progress[yesterdayStr]?.completed) {
+    isStreakActive = true;
+    currentStreak = 0;
+    date = addDays(today, -2);
+  } else {
+    return 0; // No streak if neither today nor yesterday were completed
   }
 
-  // If no completed dates found, return 0
-  if (!lastCompletedDate) return 0;
-
-  // Count backwards from last completed date
-  date = lastCompletedDate;
-  currentStreak = 1;  // Start with 1 for the last completed date
-
-  // Look backwards for more completed days
-  date = addDays(date, -1);
-  while (date >= addDays(today, -30)) {
-    if (isDateInFrequency(date, frequency)) {
-      const dateStr = format(date, 'yyyy-MM-dd');
-      if (!progress[dateStr]?.completed) {
-        break;
-      }
-      currentStreak++;
+  // Count backwards until we find a day that wasn't completed
+  while (isStreakActive) {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    if (!progress[dateStr]?.completed) {
+      break;
     }
+    currentStreak++;
     date = addDays(date, -1);
   }
+
+  // Add 1 for the most recent completed day (either today or yesterday)
+  currentStreak++;
 
   return currentStreak;
 }
@@ -93,48 +67,11 @@ function calculateCompletion(progress) {
   return total === 0 ? 0 : Math.round((completed / total) * 100);
 }
 
-export function HabitCard({ habit, onToggleDay, onEdit, onDelete }) {
-  const streak = calculateStreak(habit.progress, habit.frequency);
+export function HabitCard({ habit, onToggleDay }) {
+  const streak = calculateStreak(habit.progress);
   const completion = calculateCompletion(habit.progress);
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
   const [isAnalyticsVisible, setIsAnalyticsVisible] = useState(false);
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
-  const menuButtonRef = useRef();
-
-  const handleMenuPress = () => {
-    menuButtonRef.current.measure((x, y, width, height, pageX, pageY) => {
-      setMenuPosition({
-        top: pageY + height + 5,
-        right: wp(100) - (pageX + width),
-      });
-      setMenuVisible(true);
-    });
-  };
-
-  const handleDelete = () => {
-    Alert.alert(
-      "Delete Habit",
-      "This action cannot be undone. Your habit streak and completion history will be permanently deleted.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            onDelete(habit.id);
-            Toast.show({
-              type: 'success',
-              text1: 'Habit deleted successfully'
-            });
-          }
-        }
-      ]
-    );
-  };
 
   // Get the time left today if streak depends on today's completion
   const getStreakText = (streak) => {
@@ -142,9 +79,8 @@ export function HabitCard({ habit, onToggleDay, onEdit, onDelete }) {
     
     const todayStr = format(new Date(), 'yyyy-MM-dd');
     const isCompletedToday = habit.progress[todayStr]?.completed;
-    const isToday = isDateInFrequency(new Date(), habit.frequency);
     
-    if (isToday && !isCompletedToday) {
+    if (!isCompletedToday) {
       return `${streak} day streak - Complete today to continue!`;
     }
     
@@ -170,11 +106,7 @@ export function HabitCard({ habit, onToggleDay, onEdit, onDelete }) {
             </Text>
           </View>
         </View>
-        <TouchableOpacity 
-          style={styles.menuButton}
-          ref={menuButtonRef}
-          onPress={handleMenuPress}
-        >
+        <TouchableOpacity style={styles.menuButton}>
           <MaterialIcons name="more-vert" size={24} color={theme.colors.textLight} />
         </TouchableOpacity>
       </View>
@@ -228,27 +160,6 @@ export function HabitCard({ habit, onToggleDay, onEdit, onDelete }) {
         visible={isAnalyticsVisible}
         onClose={() => setIsAnalyticsVisible(false)}
         habit={habit}
-      />
-
-      <PopupMenu
-        visible={menuVisible}
-        onClose={() => setMenuVisible(false)}
-        position={menuPosition}
-        options={[
-          {
-            id: 'edit',
-            label: 'Edit',
-            icon: 'edit',
-            onPress: () => onEdit(habit),
-          },
-          {
-            id: 'delete',
-            label: 'Delete',
-            icon: 'delete',
-            destructive: true,
-            onPress: handleDelete,
-          },
-        ]}
       />
     </View>
   );

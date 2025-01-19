@@ -4,8 +4,6 @@ import { Stack, useRouter } from 'expo-router'
 import { AuthProvider, useAuth } from '../contexts/AuthContext'
 import { useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { SafeAreaProvider } from 'react-native-safe-area-context'
-import Toast from 'react-native-toast-message'
 
 LogBox.ignoreLogs([
   'Warning: TNodeChildrenRenderer', 
@@ -15,12 +13,9 @@ LogBox.ignoreLogs([
 
 const _layout = () => {
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <MainLayout />
-      </AuthProvider>
-      <Toast />
-    </SafeAreaProvider>
+    <AuthProvider>
+      <MainLayout />
+    </AuthProvider>
   );
 }
 
