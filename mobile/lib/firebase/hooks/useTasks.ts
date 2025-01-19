@@ -3,6 +3,7 @@ import { doc, onSnapshot, updateDoc, arrayUnion, arrayRemove, setDoc, getDoc } f
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { FirebaseError } from 'firebase/app';
+import { useUserScore } from './useUserScore';
 
 interface Task {
   id: string;
@@ -20,6 +21,7 @@ export function useTasks() {
   const [activeTasks, setActiveTasks] = useState<Task[]>([]);
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const { updateScoreForTask } = useUserScore();
 
   // Function to force refresh tasks
   const refreshTasks = async () => {
@@ -147,10 +149,17 @@ export function useTasks() {
     const completedTask = { ...task, completed: true };
     const userRef = doc(db, 'user_goals', userId);
 
-    await updateDoc(userRef, {
-      activeTasks: arrayRemove(task),
-      completedTasks: arrayUnion(completedTask)
-    });
+    try {
+      await updateDoc(userRef, {
+        activeTasks: arrayRemove(task),
+        completedTasks: arrayUnion(completedTask)
+      });
+      
+      // Update score when task is completed
+      await updateScoreForTask(task);
+    } catch (error) {
+      console.error('Error completing task:', error);
+    }
   };
 
   // Delete task

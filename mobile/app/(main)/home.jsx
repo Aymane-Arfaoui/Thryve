@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, ScrollView, Platform, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, ScrollView, Platform, Modal, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import BackButton from '../../components/BackButton';
 import ScreenWrapper from '../../components/ScreenWrapper';
@@ -23,12 +23,13 @@ import { useUserScore } from '../../lib/firebase/hooks/useUserScore';
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const { score, loading: scoreLoading } = useUserScore();
+  const userId = user?.sub || user?.id;
   const [userData, setUserData] = useState(null);
   const [isTaskModalVisible, setIsTaskModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const { activeTasks, loading: tasksLoading, addTask, completeTask, getDashboardTasks, deleteTask, refreshTasks } = useTasks();
   const { goals, loading: goalsLoading, completeGoal } = useGoals();
+  const { score, loading: scoreLoading } = useUserScore(userId);
 
   const fetchUserData = async () => {
     if (user?.id) {
@@ -41,23 +42,16 @@ export default function HomeScreen() {
 
   const handleTestCall = async () => {
     try {
-      // Get userId from both possible sources
-      const userId = user?.sub || user?.id;
-      console.log('Starting call process for user:', userId);
-      
       if (!userId) {
-        console.error('No user ID found', { user });
-        Alert.alert('Error', 'User not found');
+        console.error('No user ID found');
+        Alert.alert('Error', 'Please log in to continue');
         return;
       }
 
-      console.log('Initiating call with user data:', {
-        userId,
-        userData: userData
-      });
+      console.log('Initiating call with userId:', userId);
 
       const result = await initiateCall(userId);
-      
+
       if (result.success) {
         console.log('Call initiated successfully:', result.data);
         Alert.alert('Success', 'Call initiated!');
@@ -66,7 +60,7 @@ export default function HomeScreen() {
         Alert.alert('Error', 'Failed to start call');
       }
     } catch (error) {
-      console.error('Error making call:', error);
+      console.error('Error in handleTestCall:', error);
       Alert.alert('Error', 'Something went wrong');
     }
   };
@@ -74,6 +68,11 @@ export default function HomeScreen() {
   useEffect(() => {
     fetchUserData();
   }, [user]);
+
+  useEffect(() => {
+    console.log('Current user context:', user);
+    console.log('Current userData state:', userData);
+  }, [user, userData]);
 
   const onLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -113,22 +112,30 @@ export default function HomeScreen() {
     }
   };
 
-  // Update the dummy data naming
-  const tasks = [
-    { id: 1, name: "Finish assignment", dueDate: "2025-01-22" },
-    { id: 2, name: "Buy groceries", dueDate: "2025-01-20" }
-  ];
-
-  const handleCompleteTask = (taskId, type) => {
-    console.log(`Completing ${type}-term task ${taskId}`);
-    // Implement task completion logic here
-  };
-
   const handleSaveTask = (task) => {
-    console.log('New task:', task);
-    // Here you would typically save the task to your backend
-    // For now, we can just log it
+    console.log('Saving task:', task);
+    addTask({
+      name: task.name,
+      dueDate: task.dueDate.toISOString(),
+      priority: task.priority,
+    });
+    setIsTaskModalVisible(false);
   };
+
+  console.log('Active Tasks:', activeTasks);
+  console.log('Dashboard Tasks:', getDashboardTasks());
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchUserData();
+      await refreshTasks();
+      setRefreshing(false);
+    } catch (error) {
+      console.error('Error refreshing:', error);
+      setRefreshing(false);
+    }
+  }, [user, fetchUserData, refreshTasks]);
 
   return (
     <ScreenWrapper>
@@ -151,6 +158,14 @@ export default function HomeScreen() {
             style={styles.scrollView}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={theme.colors.primary}
+                colors={[theme.colors.primary]}
+              />
+            }
           >
             <View style={styles.scoreCardContainer}>
               <View style={[styles.scoreCard, { backgroundColor: '#4338ca' }]}>
@@ -161,7 +176,7 @@ export default function HomeScreen() {
                   </View>
                 </View>
                 <Text style={styles.scoreValue}>
-                  {scoreLoading ? '-' : score}
+                  {scoreLoading ? '...' : score}
                 </Text>
                 <View style={styles.scoreFooter}>
                   <View style={styles.scoreChange}>
@@ -172,12 +187,15 @@ export default function HomeScreen() {
                     <Text style={styles.scoreDetailsText}>View Details</Text>
                   </TouchableOpacity>
                 </View>
-                <TouchableOpacity 
-                  style={styles.scheduleCallButton}
-                  onPress={handleTestCall}
-                >
-                  <Text style={styles.scheduleCallText}>Schedule a Call</Text>
-                </TouchableOpacity>
+                <View style={styles.callButtonContainer}>
+                  <TouchableOpacity 
+                    style={styles.scheduleCallButton}
+                    onPress={handleTestCall}
+                  >
+                    <MaterialIcons name="phone" size={24} color={theme.colors.white} />
+                    <Text style={styles.scheduleCallText}>Schedule a Call</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
 
@@ -210,15 +228,49 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                 </View>
                 
-                {tasks.map(task => (
-                  <TaskItem
-                    key={task.id}
-                    name={task.name}
-                    timeInfo={task.dueDate}
-                    timeLabel="Due"
-                    onComplete={() => handleCompleteTask(task.id, 'task')}
-                  />
-                ))}
+                {!user || tasksLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <View>
+                    {Array.isArray(getDashboardTasks()) && getDashboardTasks().length > 0 ? (
+                      getDashboardTasks()
+                        .filter(task => task && typeof task === 'object')
+                        .map(task => (
+                          <TaskItem
+                            key={task.id}
+                            task={{
+                              id: task.id?.toString() || '',
+                              name: task.name?.toString() || '',
+                              dueDate: task.dueDate?.toString() || '',
+                              priority: task.priority?.toString() || '',
+                              completed: Boolean(task.completed)
+                            }}
+                            onComplete={() => completeTask(task.id)}
+                            onDelete={() => deleteTask(task.id)}
+                          />
+                        ))
+                    ) : (
+                      <View style={styles.emptyStateContainer}>
+                        <MaterialIcons 
+                          name="assignment" 
+                          size={48} 
+                          color={theme.colors.gray + '80'}
+                        />
+                        <Text style={styles.emptyStateTitle}>No Upcoming Tasks</Text>
+                        <Text style={styles.emptyStateText}>
+                          Start by adding your first task to stay organized
+                        </Text>
+                        <TouchableOpacity 
+                          style={styles.addTaskButton}
+                          onPress={() => setIsTaskModalVisible(true)}
+                        >
+                          <MaterialIcons name="add" size={20} color={theme.colors.white} />
+                          <Text style={styles.addTaskButtonText}>Add New Task</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                )}
               </View>
 
               <View style={styles.tasksList}>
@@ -229,65 +281,66 @@ export default function HomeScreen() {
                   </View>
                 </View>
                 
-                {goals.map(goal => (
-                  <TaskItem
-                    key={goal.id}
-                    name={goal.name}
-                    timeInfo={goal.duration}
-                    timeLabel="Duration"
-                    onComplete={() => completeGoal(goal.id)}
-                  />
-                ))}
+                {goalsLoading ? (
+                  <LoadingSpinner />
+                ) : goals.length > 0 ? (
+                  goals.map(goal => (
+                    <TaskItem
+                      key={goal}
+                      task={{
+                        id: goal,
+                        name: goal,
+                        dueDate: 'Long Term',
+                        priority: 'Duration',
+                        completed: false
+                      }}
+                      onComplete={() => {
+                        Alert.alert(
+                          'Complete Goal',
+                          'Are you sure you want to mark this goal as complete?',
+                          [
+                            {
+                              text: 'Cancel',
+                              style: 'cancel'
+                            },
+                            {
+                              text: 'Complete',
+                              onPress: () => completeGoal(goal)
+                            }
+                          ]
+                        );
+                      }}
+                    />
+                  ))
+                ) : (
+                  <View style={styles.emptyStateContainer}>
+                    <MaterialIcons 
+                      name="track-changes" 
+                      size={48} 
+                      color={theme.colors.gray + '80'}
+                    />
+                    <Text style={styles.emptyStateTitle}>Ready to Set Your Goals?</Text>
+                    <Text style={styles.emptyStateText}>
+                      Schedule a call with our coach to create your personalized goal plan
+                    </Text>
+                    <TouchableOpacity 
+                      style={[styles.addTaskButton, { backgroundColor: '#4338ca' }]}
+                      onPress={handleTestCall}
+                    >
+                      <MaterialIcons name="phone" size={20} color={theme.colors.white} />
+                      <Text style={styles.addTaskButtonText}>Schedule a Call</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             </View>
 
-            <View style={styles.dashboardCard}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>Habits</Text>
-                <TouchableOpacity 
-                  onPress={() => router.push('/(main)/habits')}
-                  style={styles.viewAllButton}
-                >
-                  <Text style={styles.viewAllText}>View All</Text>
-                  <MaterialIcons name="arrow-forward" size={16} color={theme.colors.button} />
-                </TouchableOpacity>
-              </View>
-              
-              <Text style={styles.habitSubtext}>
-                Track your daily habits and build consistency
-              </Text>
-            </View>
+            <HabitsDashboardCard 
+              onPress={() => router.push('/(main)/habits')}
+            />
 
-            <View style={styles.dashboardCard}>
-              <Text style={styles.cardTitle}>Your Progress</Text>
-              <View style={styles.chartContainer}>
-                <ProgressChart
-                  data={progressData}
-                  width={chartWidth}
-                  height={hp(20)}
-                  strokeWidth={16}
-                  radius={32}
-                  chartConfig={chartConfig}
-                  hideLegend={false}
-                  style={styles.chart}
-                />
-              </View>
-              
-              <View style={styles.statsContainer}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>85%</Text>
-                  <Text style={styles.statLabel}>Daily Goal</Text>
-                </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>24</Text>
-                  <Text style={styles.statLabel}>Calls Made</Text>
-                </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>4.8</Text>
-                  <Text style={styles.statLabel}>Avg. Rating</Text>
-                </View>
-              </View>
-            </View>
+            {/* Add padding at the bottom to prevent overlap with button */}
+            <View style={{ height: hp(10) }} />
           </ScrollView>
         </View>
       </GestureHandlerRootView>
@@ -338,7 +391,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: wp(5),
     paddingTop: hp(4),
-    paddingBottom: Platform.OS === 'ios' ? hp(16) : hp(14), // Increased padding to prevent overlap
+    paddingBottom: hp(12), // Increased to prevent overlap with bottom button
   },
   infoCard: {
     backgroundColor: theme.colors.white,
@@ -539,13 +592,54 @@ const styles = StyleSheet.create({
     color: theme.colors.textLight,
     marginTop: hp(1),
   },
-  scheduleCallButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  emptyStateContainer: {
+    alignItems: 'center',
+    padding: hp(4),
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radius.lg,
+    gap: hp(1.5),
+  },
+  emptyStateTitle: {
+    fontSize: hp(2),
+    fontWeight: theme.fonts.bold,
+    color: theme.colors.dark,
+    marginTop: hp(1),
+  },
+  emptyStateText: {
+    fontSize: hp(1.6),
+    color: theme.colors.textLight,
+    textAlign: 'center',
+  },
+  addTaskButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.button,
     paddingHorizontal: wp(4),
     paddingVertical: hp(1.5),
     borderRadius: theme.radius.full,
     marginTop: hp(2),
+    gap: wp(2),
+  },
+  addTaskButtonText: {
+    color: theme.colors.white,
+    fontSize: hp(1.6),
+    fontWeight: theme.fonts.medium,
+  },
+  callButtonContainer: {
+    marginTop: hp(3),
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.2)',
+    paddingTop: hp(3),
+  },
+  scheduleCallButton: {
+    backgroundColor: theme.colors.success,
+    paddingHorizontal: wp(4),
+    paddingVertical: hp(1.5),
+    borderRadius: theme.radius.full,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: wp(2),
   },
   scheduleCallText: {
     color: theme.colors.white,
@@ -563,27 +657,31 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
     borderTopWidth: 1,
     borderTopColor: theme.colors.gray + '20',
-    elevation: 5, // Add elevation for Android
-    shadowColor: theme.colors.dark, // Add shadow for iOS
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
+    elevation: 8,
+    shadowColor: theme.colors.dark,
+    shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowRadius: 4,
+    zIndex: 1000,
   },
   bottomButton: {
-    backgroundColor: '#4338ca',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: hp(1.8),
+    backgroundColor: '#4338ca',
+    paddingHorizontal: wp(4),
+    paddingVertical: hp(1.5),
     borderRadius: theme.radius.full,
     gap: wp(2),
+    shadowColor: theme.colors.dark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   bottomButtonText: {
     color: theme.colors.white,
-    fontSize: hp(1.8),
+    fontSize: hp(1.6),
     fontWeight: theme.fonts.medium,
   },
 });
