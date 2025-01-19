@@ -34,7 +34,9 @@ AZURE_MODELS  = {
     ),
 }
 
-HOST_DOMAIN = "https://thryve-f227a234ead5.herokuapp.com"
+# HOST_DOMAIN = "https://thryve-f227a234ead5.herokuapp.com"
+HOST_DOMAIN = "https://9718-34-130-234-203.ngrok-free.app"
+
 
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
