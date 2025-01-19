@@ -6,38 +6,103 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
 import { hp, wp } from '../../helpers/common';
 import { HabitCard } from '../../components/HabitCard';
+import { format } from 'date-fns';
+import { AddHabitModal } from '../../components/AddHabitModal';
+import Toast from 'react-native-toast-message';
 import { useHabits } from '../../lib/firebase/hooks/useHabits';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 export default function HabitsScreen() {
   const router = useRouter();
-  const { habits, habitLogs, loading, completeHabit, deleteHabit, updateHabitDays, addHabit } = useHabits();
+  const { habits, habitLogs, loading, addHabit, updateHabit, completeHabit, deleteHabit, updateHabitDays } = useHabits();
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [habitToEdit, setHabitToEdit] = useState(null);
 
-  const handleToggleDay = (habitId, dateStr) => {
-    // This will handle both completing and uncompleting a habit for a specific date
-    completeHabit(habitId);
+  const handleToggleDay = async (habitId: string, dateStr: string) => {
+    try {
+      const result = await completeHabit(habitId, dateStr);
+      
+      if (result.completed) {
+        Toast.show({
+          type: 'success',
+          text1: 'Habit completed!',
+          text2: result.isNewRecord 
+            ? `New record! ${result.newStreak} day streak! 🔥` 
+            : result.newStreak > 1 
+              ? `Keep it up! ${result.newStreak} day streak! 🔥`
+              : 'Keep going! Start your streak! 💪'
+        });
+      } else {
+        Toast.show({
+          type: 'info',
+          text1: 'Habit marked as incomplete',
+          text2: 'You can always complete it later'
+        });
+      }
+    } catch (error) {
+      if (error.message === 'Cannot complete habits for future dates') {
+        Toast.show({
+          type: 'error',
+          text1: 'Cannot complete future dates',
+          text2: 'You can only complete habits for today or past days'
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Failed to update habit',
+          text2: 'Please try again'
+        });
+      }
+    }
   };
 
-  const handleDeleteHabit = (habitId) => {
-    Alert.alert(
-      "Delete Habit",
-      "Are you sure you want to delete this habit?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Delete",
-          onPress: () => deleteHabit(habitId),
-          style: 'destructive'
-        }
-      ]
-    );
+  const handleEdit = (habit) => {
+    setHabitToEdit(habit);
+    setIsAddModalVisible(true);
   };
 
-  const handleUpdateDays = (habitId, selectedDays) => {
-    updateHabitDays(habitId, selectedDays);
+  const handleDelete = (habitId) => {
+    try {
+      deleteHabit(habitId);
+      Toast.show({
+        type: 'success',
+        text1: 'Habit deleted successfully'
+      });
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to delete habit',
+        text2: error.message
+      });
+    }
+  };
+
+  const handleSaveHabit = async (habitData) => {
+    try {
+      if (habitData.id) {
+        // Editing existing habit
+        await updateHabit(habitData);
+        Toast.show({
+          type: 'success',
+          text1: 'Habit updated successfully'
+        });
+      } else {
+        // Creating new habit
+        await addHabit(habitData);
+        Toast.show({
+          type: 'success',
+          text1: 'Habit created successfully'
+        });
+      }
+      setIsAddModalVisible(false);
+      setHabitToEdit(null);
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to save habit',
+        text2: error.message
+      });
+    }
   };
 
   return (
@@ -65,8 +130,10 @@ export default function HabitsScreen() {
               <HabitCard
                 key={habit.id}
                 habit={habit}
-                onToggleDay={handleToggleDay}
                 log={habitLogs.find(log => log.habitId === habit.id)}
+                onToggleDay={handleToggleDay}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
               />
             ))
           ) : (
@@ -86,10 +153,20 @@ export default function HabitsScreen() {
 
         <TouchableOpacity 
           style={styles.fab}
-          onPress={() => {/* TODO: Implement habit creation */}}
+          onPress={() => setIsAddModalVisible(true)}
         >
           <MaterialIcons name="add" size={24} color={theme.colors.white} />
         </TouchableOpacity>
+
+        <AddHabitModal
+          visible={isAddModalVisible}
+          onClose={() => {
+            setIsAddModalVisible(false);
+            setHabitToEdit(null);
+          }}
+          onSave={handleSaveHabit}
+          habitToEdit={habitToEdit}
+        />
       </View>
     </ScreenWrapper>
   );
@@ -123,15 +200,19 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    right: wp(4),
     bottom: hp(4),
-    width: wp(14),
-    height: wp(14),
-    borderRadius: wp(7),
-    backgroundColor: theme.colors.primary,
+    right: wp(4),
+    width: wp(15),
+    height: wp(15),
+    borderRadius: wp(7.5),
+    backgroundColor: theme.colors.orange,
     justifyContent: 'center',
     alignItems: 'center',
     ...theme.shadows.md,
+    elevation: 4,
+    shadowColor: theme.colors.orange,
+    shadowOpacity: 0.4,
+    transform: [{ scale: 1.02 }],
   },
   emptyStateContainer: {
     flex: 1,
@@ -148,6 +229,6 @@ const styles = StyleSheet.create({
     fontSize: hp(1.8),
     color: theme.colors.gray,
     textAlign: 'center',
-    marginTop: hp(1),
+    padding: hp(2),
   },
 }); 
