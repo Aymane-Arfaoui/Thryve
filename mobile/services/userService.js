@@ -61,7 +61,8 @@ export const initiateCall = async (userId, callBotId) => {
             target_phone_number: userData.data.phone_number, 
             custom_params: {
                 user_id: userData.data.id,
-                first_name: userData.data.first_name 
+                first_name: userData.data.first_name,
+                bot_id: callBotId
             }
         };
 

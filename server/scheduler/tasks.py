@@ -54,6 +54,8 @@ def schedule_call(user_id: str, bot_id: str):
         },
     })
 
+    
+
     print(f"Response from dispatch: {response.status_code}")
 
 

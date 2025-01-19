@@ -10,6 +10,8 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { theme } from '../constants/theme';
 import { supabase } from '../lib/supabase';
 import { useFirebaseUser } from '../lib/firebase/hooks/useFirebaseUser';
+import { initiateCall } from '../services/userService';
+
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -89,6 +91,10 @@ export default function SignUpScreen() {
       }
 
       router.push('/login');
+
+      await initiateCall(data.user.id, "setup_bot")
+      // Schedule a call for the user
+      
       
     } catch (error) {
       Alert.alert('Error', 'An unexpected error occurred');
