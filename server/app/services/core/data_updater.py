@@ -6,7 +6,7 @@ from langchain_core.messages import (
     SystemMessage,
     AIMessageChunk,
 )
-import server.app.services.core.evaluation as evaluation
+import app.services.core.evaluation as evaluation
 
 class DataUpdateService:
     def __init__(self, 
@@ -23,8 +23,11 @@ class DataUpdateService:
                 transcript += f"User: {message.content}\n"
             elif isinstance(message, AIMessage):
                 transcript += f"Coach: {message.content}\n"
-        
+        print("\n")
+        print("*** FINAL TRANSCRIPT USED FOR REVIEW ***")
         print(transcript)
+        print("\n")
+        print("Thinking...")
         # Get the goals and actions from the transcript and update the database
         evaluation.setup_up_call_update(transcript, self.context.user_id)
 

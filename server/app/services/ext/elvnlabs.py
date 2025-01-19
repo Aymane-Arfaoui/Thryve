@@ -66,7 +66,6 @@ class ElevenLabsClient(StreamingVoiceInterface):
                 if response.get('audio') and self.on_audio_received_callback:
 
                     if asyncio.iscoroutinefunction(self.on_audio_received_callback):
-                        print("Audio callback is a coroutine")
                         await self.on_audio_received_callback(response['audio'])
                     else:
                         self.on_audio_received_callback(response['audio'])

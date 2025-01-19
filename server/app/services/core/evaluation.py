@@ -25,6 +25,7 @@ Daily Action 1: [daily action 1]
 Daily Action 2: [daily action 2]"""
     
     ai_response = openai_call(prompt)
+
     return ai_response
 
 
@@ -43,7 +44,7 @@ def extract_action_name(action_description: str):
     prompt = f"""From the action description below shorten it into a title that I can display in an app that encaspulates the action.Extract the name of the action in the following format and keep in less than 2 words. For example if the user says they want to drink water everyday the action name is "Water" or if they said they want to quit vaping the action name is "Vaping":
 Action Description: {action_description}
 Action Title:"""
-    
+        
     ai_response = openai_call(prompt)
     return ai_response
 
@@ -65,6 +66,9 @@ def setup_up_call_update(transcript: str, user_id: str):
     goals_ai_extraction = setup_evaluation(transcript)
     goals_and_actions = extract_goals_and_actions(goals_ai_extraction)
 
+
+    print("\nExtracted goals and actions: ", goals_and_actions)
+
     # Get long term goals and action descriptions
     ltg_1_description = goals_and_actions['goal1']
     ltg_2_description = goals_and_actions['goal2']
@@ -76,12 +80,16 @@ def setup_up_call_update(transcript: str, user_id: str):
     action_title_1 = extract_action_name(action_1_description).replace('"', '')
     action_title_2 = extract_action_name(action_2_description).replace('"', '')
 
+    print("\Determined action titles: ", action_title_1, action_title_2)
+
     # Update long term goals
     firebase_db.create_long_term_goals(user_id, [ltg_1_description, ltg_2_description])
 
     # Update daily actions
     firebase_db.add_habit(user_id, action_title_1, action_1_description)
     firebase_db.add_habit(user_id, action_title_2, action_2_description)
+
+    print("Updated user profile :)")
 
 
 

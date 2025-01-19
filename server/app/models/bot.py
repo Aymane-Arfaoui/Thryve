@@ -6,7 +6,7 @@ from langchain_community.vectorstores import FAISS
 
 
 class Voices(Enum):
-    KAJEN = "47zW6C63rcp2Ui4o25NB"
+    KAJEN = "mTt39wvh3l2YIUkZstfG"
 
 @dataclass(frozen=True)
 class Bot:

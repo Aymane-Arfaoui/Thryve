@@ -103,8 +103,6 @@ class VoiceAgent:
         if self.should_enable_user_speech(transcript):
 
             if self.voice_context.agent_speaking:
-                print("User Interrupted")
-
                 self.voice_interface.set_ignore_incoming_audio(True)
                 self.voice_interface.force_flush()
                 self.voice_context.interruption = True
@@ -125,16 +123,10 @@ class VoiceAgent:
         if not input:
             return
 
-        print("All keyword args: ", {"state" : json.dumps(self.voice_context.call_state), **self.voice_context.const_keyword_args})
-
-
         response_gen = self.response_engine.create_response_gen(
             input,
             **{"state" : self.voice_context.call_state, **self.voice_context.const_keyword_args}
         )
-
-        print("Sentence response gen: ", response_gen)
-
         agent_response = ""
 
         FLUSH_THRESHOLD_WITH_COMMA = 8
@@ -150,11 +142,14 @@ class VoiceAgent:
             if not text:
                 continue
 
+
+
             if self.voice_context.interruption:
                 print("Interruption detected")
                 break
 
             response_to_be_flushed.append(text)
+            agent_response += text
 
             if (any(char in text for char in ['.', '?', '!']) 
                         or ',' in text and len(response_to_be_flushed) >= FLUSH_THRESHOLD_WITH_COMMA
@@ -163,12 +158,13 @@ class VoiceAgent:
                         or first_stream_temp and len(response_to_be_flushed) >= FLUSH_FIRST_STREAM_THRESHOLD):
             
                 await self.voice_interface.send_audio_request(text, flush = True)
-                agent_response += text
                 first_stream_temp = False
                 response_to_be_flushed = []
 
             else:
                 await self.voice_interface.send_audio_request(text, flush = False)
+
+        print("Agent response: ", agent_response)
 
         self.voice_context.agent_speaking = False
         self.response_engine.add_to_chat_history(agent_response, ChatMessageTypes.AI)

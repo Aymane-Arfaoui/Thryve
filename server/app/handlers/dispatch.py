@@ -4,6 +4,7 @@ from twilio.rest import Client
 from config import HOST_DOMAIN, TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID
 from app.utils.misc import is_json_serializable
 import json
+from app.services.core.userdata import UserDataService
 
 async def dispatch_call(request : web.Request):
     
@@ -22,6 +23,13 @@ async def dispatch_call(request : web.Request):
         except Exception as e:
             print("Error loading json: ", value, "Error: ", e)
 
+    user_data_service = UserDataService()
+    user_data_service.load_data_from_id(custom_params.get("user_id"))
+    user_data_service.fetch_goals()
+    user_data_service.fetch_habits()
+
+    custom_params["goals"] = user_data_service.get_goals_string()
+    custom_params["actions"] = user_data_service.get_habits_string()
 
     twiml_builder = TwimlStreamBuilder()
     twiml_builder.with_ws_url(f"{HOST_DOMAIN.replace('https://', 'wss://')}/call")

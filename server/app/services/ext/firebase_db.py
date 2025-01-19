@@ -60,7 +60,7 @@ def create_long_term_goals(user_id: str, long_term_goals: list):
 
 
 # Function to get the user's long term goals
-def get_long_term_goals(user_id: str):
+def get_long_term_goal_descriptions(user_id: str):
     db = firestore.client()
     collection_name = "user_goals"
     doc_ref = db.collection(collection_name).document(user_id)
@@ -72,7 +72,7 @@ def get_long_term_goals(user_id: str):
 
 
 # Get all habits names and descriptions
-def get_habits_names(user_id: str):
+def get_habits_data(user_id: str):
     db = firestore.client()
     collection_name = "user_goals"
     doc_ref = db.collection(collection_name).document(user_id)
