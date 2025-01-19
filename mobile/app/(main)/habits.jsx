@@ -18,7 +18,7 @@ export default function HabitsScreen() {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [habitToEdit, setHabitToEdit] = useState(null);
 
-  const handleToggleDay = async (habitId: string, dateStr: string) => {
+  const handleToggleDay = async (habitId, dateStr) => {
     try {
       const result = await completeHabit(habitId, dateStr);
       

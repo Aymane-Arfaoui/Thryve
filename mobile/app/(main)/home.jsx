@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, ScrollView, Platform, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, ScrollView, Platform, Modal, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import BackButton from '../../components/BackButton';
 import ScreenWrapper from '../../components/ScreenWrapper';
