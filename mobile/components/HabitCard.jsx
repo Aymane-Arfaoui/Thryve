@@ -9,47 +9,40 @@ import { startOfWeek } from 'date-fns/startOfWeek';
 import { HabitCalendarModal } from './HabitCalendarModal';
 import { HabitAnalyticsModal } from './HabitAnalyticsModal';
 
-function calculateStreak(progress) {
+function calculateStreak(completedDates) {
   const today = new Date();
   let currentStreak = 0;
   let date = today;
   let isStreakActive = false;
 
-  // Check if today is completed
   const todayStr = format(today, 'yyyy-MM-dd');
   const yesterdayStr = format(addDays(today, -1), 'yyyy-MM-dd');
   
-  // Case 1: Today is completed
-  if (progress[todayStr]?.completed) {
+  if (completedDates.includes(todayStr)) {
     isStreakActive = true;
     currentStreak = 0;
     date = addDays(today, -1);
-  // Case 2: Today not completed but yesterday was (streak still alive)
-  } else if (progress[yesterdayStr]?.completed) {
+  } else if (completedDates.includes(yesterdayStr)) {
     isStreakActive = true;
     currentStreak = 0;
     date = addDays(today, -2);
   } else {
-    return 0; // No streak if neither today nor yesterday were completed
+    return 0;
   }
 
-  // Count backwards until we find a day that wasn't completed
   while (isStreakActive) {
     const dateStr = format(date, 'yyyy-MM-dd');
-    if (!progress[dateStr]?.completed) {
+    if (!completedDates.includes(dateStr)) {
       break;
     }
     currentStreak++;
     date = addDays(date, -1);
   }
 
-  // Add 1 for the most recent completed day (either today or yesterday)
-  currentStreak++;
-
-  return currentStreak;
+  return currentStreak + 1;
 }
 
-function calculateCompletion(progress) {
+function calculateCompletion(completedDates) {
   const today = new Date();
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
   let completed = 0;
@@ -60,25 +53,24 @@ function calculateCompletion(progress) {
     if (date > today) continue;
     
     const dateStr = format(date, 'yyyy-MM-dd');
-    if (progress[dateStr]?.completed) completed++;
+    if (completedDates.includes(dateStr)) completed++;
     total++;
   }
 
   return total === 0 ? 0 : Math.round((completed / total) * 100);
 }
 
-export function HabitCard({ habit, onToggleDay }) {
-  const streak = calculateStreak(habit.progress);
-  const completion = calculateCompletion(habit.progress);
+export function HabitCard({ habit, log, onToggleDay }) {
+  const streak = habit.currentStreak;
+  const completion = calculateCompletion(log?.completedDates || []);
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
   const [isAnalyticsVisible, setIsAnalyticsVisible] = useState(false);
 
-  // Get the time left today if streak depends on today's completion
   const getStreakText = (streak) => {
     if (streak === 0) return 'No streak';
     
     const todayStr = format(new Date(), 'yyyy-MM-dd');
-    const isCompletedToday = habit.progress[todayStr]?.completed;
+    const isCompletedToday = log?.completedDates.includes(todayStr);
     
     if (!isCompletedToday) {
       return `${streak} day streak - Complete today to continue!`;
@@ -87,12 +79,8 @@ export function HabitCard({ habit, onToggleDay }) {
     return `${streak} day${streak === 1 ? '' : 's'}`;
   };
 
-  const getFrequencyText = (frequency) => {
-    if (frequency.type === 'daily') {
-      return 'Every day';
-    }
-    // Add more frequency types here
-    return 'Custom';
+  const getFrequencyText = (habit) => {
+    return `${habit.selectedDays.length} days per week`;
   };
 
   return (
@@ -102,7 +90,7 @@ export function HabitCard({ habit, onToggleDay }) {
           <Text style={styles.habitName}>{habit.name}</Text>
           <View style={styles.frequencyTag}>
             <Text style={styles.frequencyText}>
-              {getFrequencyText(habit.frequency)}
+              {getFrequencyText(habit)}
             </Text>
           </View>
         </View>
@@ -111,7 +99,11 @@ export function HabitCard({ habit, onToggleDay }) {
         </TouchableOpacity>
       </View>
 
-      <HabitWeekView habit={habit} onToggleDay={onToggleDay} />
+      <HabitWeekView 
+        habit={habit} 
+        log={log}
+        onToggleDay={onToggleDay} 
+      />
 
       <View style={styles.footer}>
         <View style={styles.statsContainer}>

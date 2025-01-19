@@ -15,6 +15,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { MaterialIcons } from '@expo/vector-icons';
 import { TaskModal } from '../../components/TaskModal';
 import { useTasks } from '../../lib/firebase/hooks/useTasks';
+import { useGoals } from '../../lib/firebase/hooks/useGoals';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 export default function HomeScreen() {
@@ -24,6 +25,7 @@ export default function HomeScreen() {
   const [isTaskModalVisible, setIsTaskModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const { activeTasks, loading: tasksLoading, addTask, completeTask, getDashboardTasks, deleteTask, refreshTasks } = useTasks();
+  const { goals, loading: goalsLoading, completeGoal } = useGoals();
 
   const fetchUserData = async () => {
     if (user?.id) {
@@ -110,12 +112,6 @@ export default function HomeScreen() {
       stroke: theme.colors.primary
     }
   };
-
-  // Update the dummy data naming
-  const goals = [
-    { id: 1, name: "Start a workout routine", duration: "3 months" },
-    { id: 2, name: "Learn a new language", duration: "6 months" }
-  ];
 
   const handleSaveTask = (task) => {
     console.log('Saving task:', task);
@@ -284,18 +280,57 @@ export default function HomeScreen() {
                   </View>
                 </View>
                 
-                {goals.map(goal => (
-                  <TaskItem
-                    key={goal.id}
-                    task={{
-                      id: goal.id.toString(),
-                      name: goal.name,
-                      dueDate: goal.duration,
-                      priority: 'Duration',
-                      completed: false
-                    }}
-                  />
-                ))}
+                {goalsLoading ? (
+                  <LoadingSpinner />
+                ) : goals.length > 0 ? (
+                  goals.map(goal => (
+                    <TaskItem
+                      key={goal}
+                      task={{
+                        id: goal,
+                        name: goal,
+                        dueDate: 'Long Term',
+                        priority: 'Duration',
+                        completed: false
+                      }}
+                      onComplete={() => {
+                        Alert.alert(
+                          'Complete Goal',
+                          'Are you sure you want to mark this goal as complete?',
+                          [
+                            {
+                              text: 'Cancel',
+                              style: 'cancel'
+                            },
+                            {
+                              text: 'Complete',
+                              onPress: () => completeGoal(goal)
+                            }
+                          ]
+                        );
+                      }}
+                    />
+                  ))
+                ) : (
+                  <View style={styles.emptyStateContainer}>
+                    <MaterialIcons 
+                      name="track-changes" 
+                      size={48} 
+                      color={theme.colors.gray + '80'}
+                    />
+                    <Text style={styles.emptyStateTitle}>Ready to Set Your Goals?</Text>
+                    <Text style={styles.emptyStateText}>
+                      Schedule a call with our coach to create your personalized goal plan
+                    </Text>
+                    <TouchableOpacity 
+                      style={[styles.addTaskButton, { backgroundColor: '#4338ca' }]}
+                      onPress={handleTestCall}
+                    >
+                      <MaterialIcons name="phone" size={20} color={theme.colors.white} />
+                      <Text style={styles.addTaskButtonText}>Schedule a Call</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             </View>
 
