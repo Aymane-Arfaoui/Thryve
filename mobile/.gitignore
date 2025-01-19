@@ -6,3 +6,18 @@ expo-env.d.ts
 
 # Sensitive information
 constants/index.js
+
+node_modules/
+.expo/
+dist/
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+.env
+# Firebase config
+lib/firebase/config.ts
