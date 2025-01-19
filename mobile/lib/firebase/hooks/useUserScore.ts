@@ -16,20 +16,60 @@ export function useUserScore() {
   const userId = user?.sub || user?.id;
   const [score, setScore] = useState(0);
   const [scoreHistory, setScoreHistory] = useState<ScoreHistory[]>([]);
-  const { completedTasks } = useTasks();
+  const { completedTasks, activeTasks } = useTasks();
   const { habits } = useHabits();
   const [loading, setLoading] = useState(true);
 
   // Calculate score based on completed tasks and habits
   const calculateScore = () => {
     const today = new Date().toISOString().split('T')[0];
-    const taskScore = completedTasks.length * 10;
-    const habitScore = habits.reduce((score, habit) => {
-      const completedToday = habit.progress?.[today]?.completed;
-      return score + (completedToday ? 5 : 0);
+    
+    // Calculate total possible points
+    const totalPossiblePoints = 100; // Maximum score is 100%
+    
+    // Weight distribution (total should be 100)
+    const weights = {
+      tasks: 60,  // Tasks are worth 60% of total score
+      habits: 40  // Habits are worth 40% of total score
+    };
+
+    // Task scoring based on priority
+    const taskPriorityPoints = {
+      high: 15,    // High priority tasks worth more
+      medium: 10,  // Medium priority tasks worth medium
+      low: 5       // Low priority tasks worth less
+    };
+
+    // Calculate task score
+    const totalTaskPoints = activeTasks.reduce((total, task) => {
+      const priority = task.priority?.toLowerCase() || 'low';
+      return total + taskPriorityPoints[priority];
     }, 0);
 
-    return taskScore + habitScore;
+    const earnedTaskPoints = completedTasks.reduce((total, task) => {
+      const priority = task.priority?.toLowerCase() || 'low';
+      return total + taskPriorityPoints[priority];
+    }, 0);
+
+    const taskScore = totalTaskPoints > 0 
+      ? (earnedTaskPoints / totalTaskPoints) * weights.tasks 
+      : 0;
+
+    // Calculate habit score
+    const totalHabitPoints = habits.length * 5; // Each habit is worth 5 points
+    const earnedHabitPoints = habits.reduce((total, habit) => {
+      const completedToday = habit.progress?.[today]?.completed;
+      return total + (completedToday ? 5 : 0);
+    }, 0);
+
+    const habitScore = totalHabitPoints > 0 
+      ? (earnedHabitPoints / totalHabitPoints) * weights.habits 
+      : 0;
+
+    // Calculate final score (percentage)
+    const finalScore = Math.min(Math.round(taskScore + habitScore), 100);
+    
+    return finalScore;
   };
 
   // Update score in Firebase
