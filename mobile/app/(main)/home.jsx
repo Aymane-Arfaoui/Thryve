@@ -7,7 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { supabase } from '../../lib/supabase';
 import { theme } from '../../constants/theme';
 import { hp, wp } from '../../helpers/common';
-import { getUserData } from '../../services/userService';
+import { getUserData, initiateCall } from '../../services/userService';
 import { useAuth } from '../../contexts/AuthContext';
 import { LineChart, ProgressChart } from 'react-native-chart-kit';
 import { TaskItem } from '../../components/TaskItem';
@@ -37,6 +37,11 @@ export default function HomeScreen() {
   useEffect(() => {
     fetchUserData();
   }, [user]);
+
+  useEffect(() => {
+    console.log('Current user context:', user);
+    console.log('Current userData state:', userData);
+  }, [user, userData]);
 
   const onLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -155,6 +160,12 @@ export default function HomeScreen() {
                     <Text style={styles.scoreDetailsText}>View Details</Text>
                   </TouchableOpacity>
                 </View>
+                <TouchableOpacity 
+                  style={styles.scheduleCallButton}
+                  onPress={handleTestCall}
+                >
+                  <Text style={styles.scheduleCallText}>Schedule a Call</Text>
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -305,6 +316,17 @@ export default function HomeScreen() {
           </ScrollView>
         </View>
       </GestureHandlerRootView>
+      
+      <View style={styles.bottomButtonContainer}>
+        <TouchableOpacity 
+          style={styles.bottomButton}
+          onPress={handleTestCall}
+        >
+          <MaterialIcons name="phone" size={24} color={theme.colors.white} />
+          <Text style={styles.bottomButtonText}>Schedule a Call</Text>
+        </TouchableOpacity>
+      </View>
+
       <TaskModal
         visible={isTaskModalVisible}
         onClose={() => setIsTaskModalVisible(false)}
