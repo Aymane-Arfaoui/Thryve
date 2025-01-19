@@ -7,7 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { supabase } from '../../lib/supabase';
 import { theme } from '../../constants/theme';
 import { hp, wp } from '../../helpers/common';
-import { getUserData } from '../../services/userService';
+import { getUserData, initiateCall } from '../../services/userService';
 import { useAuth } from '../../contexts/AuthContext';
 import { LineChart, ProgressChart } from 'react-native-chart-kit';
 import { TaskItem } from '../../components/TaskItem';
@@ -33,6 +33,11 @@ export default function HomeScreen() {
 
     fetchUserData();
   }, [user]);
+
+  useEffect(() => {
+    console.log('Current user context:', user);
+    console.log('Current userData state:', userData);
+  }, [user, userData]);
 
   const onLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -94,6 +99,36 @@ export default function HomeScreen() {
     // For now, we can just log it
   };
 
+  const handleTestCall = async () => {
+    try {
+      console.log('Current userData:', userData);
+      
+      if (!userData?.id) {
+        console.error('No user ID found in userData');
+        Alert.alert('Error', 'User data not found');
+        return;
+      }
+
+      console.log('Initiating call with userData:', {
+        userId: userData.id,
+        userData: userData
+      });
+
+      const result = await initiateCall(userData.id);
+      
+      if (result.success) {
+        console.log('Call initiated successfully:', result.data);
+        Alert.alert('Success', 'Call initiated!');
+      } else {
+        console.error('Failed to initiate call:', result.msg);
+        Alert.alert('Error', 'Failed to start call');
+      }
+    } catch (error) {
+      console.error('Error in handleTestCall:', error);
+      Alert.alert('Error', 'Something went wrong');
+    }
+  };
+
   return (
     <ScreenWrapper>
       <GestureHandlerRootView style={{ flex: 1 }}>
@@ -134,6 +169,12 @@ export default function HomeScreen() {
                     <Text style={styles.scoreDetailsText}>View Details</Text>
                   </TouchableOpacity>
                 </View>
+                <TouchableOpacity 
+                  style={styles.scheduleCallButton}
+                  onPress={handleTestCall}
+                >
+                  <Text style={styles.scheduleCallText}>Schedule a Call</Text>
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -247,6 +288,17 @@ export default function HomeScreen() {
           </ScrollView>
         </View>
       </GestureHandlerRootView>
+      
+      <View style={styles.bottomButtonContainer}>
+        <TouchableOpacity 
+          style={styles.bottomButton}
+          onPress={handleTestCall}
+        >
+          <MaterialIcons name="phone" size={24} color={theme.colors.white} />
+          <Text style={styles.bottomButtonText}>Schedule a Call</Text>
+        </TouchableOpacity>
+      </View>
+
       <TaskModal
         visible={isTaskModalVisible}
         onClose={() => setIsTaskModalVisible(false)}
@@ -483,5 +535,44 @@ const styles = StyleSheet.create({
     fontSize: hp(1.6),
     color: theme.colors.textLight,
     marginTop: hp(1),
+  },
+  scheduleCallButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: wp(4),
+    paddingVertical: hp(1.5),
+    borderRadius: theme.radius.full,
+    marginTop: hp(2),
+    alignItems: 'center',
+  },
+  scheduleCallText: {
+    color: theme.colors.white,
+    fontSize: hp(1.8),
+    fontWeight: theme.fonts.medium,
+  },
+  bottomButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: wp(5),
+    paddingBottom: Platform.OS === 'ios' ? hp(4) : hp(2),
+    paddingTop: hp(2),
+    backgroundColor: theme.colors.white,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.gray + '20',
+  },
+  bottomButton: {
+    backgroundColor: '#4338ca',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: hp(1.8),
+    borderRadius: theme.radius.full,
+    gap: wp(2),
+  },
+  bottomButtonText: {
+    color: theme.colors.white,
+    fontSize: hp(1.8),
+    fontWeight: theme.fonts.medium,
   },
 });
