@@ -6,7 +6,7 @@ from langchain_core.messages import (
     SystemMessage,
     AIMessageChunk,
 )
-import app.evaluation as evaluation
+import server.app.services.core.evaluation as evaluation
 
 class DataUpdateService:
     def __init__(self, 
