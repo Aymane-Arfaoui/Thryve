@@ -5,5 +5,3 @@ import os
 if __name__ == "__main__":
     application = init_app()
     web.run_app(application, port=int(os.getenv("PORT", 5000)))
-
-
