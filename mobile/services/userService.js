@@ -22,7 +22,14 @@ export const getUserData = async (userId) => {
 
 // fucntion to send data to backend to initiate call
 
-export const initiateCall = async (userId) => {
+export const BotIds = {
+    MORNING_BOT: 'morning_bot',
+    SETUP_BOT: 'setup_bot', 
+    DAY_CALL_BOT: 'day_call_bot'
+};
+
+// callBotId is either morning_bot, setup_bot, or day_call_bot
+export const initiateCall = async (userId, callBotId) => {
     try {
         const userData = await getUserData(userId);
         
@@ -35,7 +42,8 @@ export const initiateCall = async (userId) => {
             target_phone_number: userData.data.phone_number, 
             custom_params: {
                 user_id: userData.data.id,
-                first_name: userData.data.first_name 
+                first_name: userData.data.first_name,
+                bot_id: callBotId
             }
         };
 

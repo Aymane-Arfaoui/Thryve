@@ -51,7 +51,7 @@ export default function HomeScreen() {
         userData: userData
       });
 
-      const result = await initiateCall(userData.id);
+      const result = await initiateCall(userData.id, "day_call_bot");
 
       if (result.success) {
         console.log('Call initiated successfully:', result.data);
