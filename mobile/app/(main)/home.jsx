@@ -183,19 +183,22 @@ export default function HomeScreen() {
                 <Text style={styles.scoreValue}>92</Text>
                 <View style={styles.scoreFooter}>
                   <View style={styles.scoreChange}>
-                     <Text style={styles.scoreChangeIcon}>↑</Text>
+                    <Text style={styles.scoreChangeIcon}>↑</Text>
                     <Text style={styles.scoreChangeText}>8% from last week</Text> 
                   </View>
                   <TouchableOpacity style={styles.scoreDetailsButton}>
                     <Text style={styles.scoreDetailsText}>View Details</Text>
                   </TouchableOpacity>
                 </View>
-                <TouchableOpacity 
-                  style={styles.scheduleCallButton}
-                  onPress={handleTestCall}
-                >
-                  <Text style={styles.scheduleCallText}>Schedule a Call</Text>
-                </TouchableOpacity>
+                <View style={styles.callButtonContainer}>
+                  <TouchableOpacity 
+                    style={styles.scheduleCallButton}
+                    onPress={handleTestCall}
+                  >
+                    <MaterialIcons name="phone" size={24} color={theme.colors.white} />
+                    <Text style={styles.scheduleCallText}>Schedule a Call</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
 
@@ -623,6 +626,64 @@ const styles = StyleSheet.create({
     gap: wp(2),
   },
   addTaskButtonText: {
+    color: theme.colors.white,
+    fontSize: hp(1.6),
+    fontWeight: theme.fonts.medium,
+  },
+  callButtonContainer: {
+    marginTop: hp(3),
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.2)',
+    paddingTop: hp(3),
+  },
+  scheduleCallButton: {
+    backgroundColor: theme.colors.success,
+    paddingHorizontal: wp(4),
+    paddingVertical: hp(1.5),
+    borderRadius: theme.radius.full,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: wp(2),
+  },
+  scheduleCallText: {
+    color: theme.colors.white,
+    fontSize: hp(1.8),
+    fontWeight: theme.fonts.medium,
+  },
+  bottomButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: wp(5),
+    paddingBottom: Platform.OS === 'ios' ? hp(4) : hp(2),
+    paddingTop: hp(2),
+    backgroundColor: theme.colors.white,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.gray + '20',
+    elevation: 5,
+    shadowColor: theme.colors.dark,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  bottomButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4338ca', // Indigo-600 to match scoreCard
+    paddingHorizontal: wp(4),
+    paddingVertical: hp(1.5),
+    borderRadius: theme.radius.full,
+    marginTop: hp(1),
+    gap: wp(2),
+    shadowColor: theme.colors.dark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  bottomButtonText: {
     color: theme.colors.white,
     fontSize: hp(1.6),
     fontWeight: theme.fonts.medium,
