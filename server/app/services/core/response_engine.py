@@ -56,7 +56,8 @@ class ResponseEngine(CallElement):
         response_gen = rg.get_response_stream(
             chain=self.retrieval_chain,
             user_input=input,
-            chat_history=self.chat_history
+            chat_history=self.chat_history,
+            prompt_kwargs=kwargs
         )
 
         async for chunk in response_gen:
