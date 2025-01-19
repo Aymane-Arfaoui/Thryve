@@ -32,6 +32,8 @@ def create_document_in_bucket(user_id: str, long_term_goals: list):
 
 # Create or overwrite long term goals
 # Function to create or update only the long-term goals for a user
+
+
 def create_long_term_goals(user_id: str, long_term_goals: list):
     # Get Firestore client
     db = firestore.client()

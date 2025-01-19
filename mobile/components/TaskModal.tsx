@@ -11,7 +11,7 @@ import {
   Keyboard,
   ScrollView,
   Dimensions,
-  StatusBar
+  TextInput
 } from 'react-native';
 import { theme } from '../constants/theme';
 import { hp, wp } from '../helpers/common';
@@ -20,7 +20,9 @@ import { InputField } from './InputField';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { FormButton } from './FormButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { format } from 'date-fns';
+import { format, isPast, isEqual } from 'date-fns';
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
+import { StatusBar } from 'react-native';
 
 interface TaskModalProps {
   visible: boolean;
@@ -46,6 +48,7 @@ export function TaskModal({ visible, onClose, onSave }: TaskModalProps) {
   const [priority, setPriority] = useState('medium');
   const [dateTimeStep, setDateTimeStep] = useState<DateTimeStep>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const keyboardWillShow = Keyboard.addListener(
@@ -64,7 +67,17 @@ export function TaskModal({ visible, onClose, onSave }: TaskModalProps) {
   }, []);
 
   const handleSave = () => {
-    if (!taskName.trim()) return;
+    const now = new Date();
+    if (isPast(dueDate) && !isEqual(dueDate, now)) {
+      setError('Task due date cannot be in the past');
+      return;
+    }
+    
+    if (!taskName.trim()) {
+      setError('Task name is required');
+      return;
+    }
+    setError('');
     Keyboard.dismiss();
     onSave({ name: taskName, dueDate, priority });
     setTaskName('');
@@ -98,7 +111,7 @@ export function TaskModal({ visible, onClose, onSave }: TaskModalProps) {
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <StatusBar style="light" />
+      <ExpoStatusBar style='light' />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={[
@@ -142,6 +155,10 @@ export function TaskModal({ visible, onClose, onSave }: TaskModalProps) {
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
+              {error && (
+                <Text style={styles.errorText}>{error}</Text>
+              )}
+
               <InputField
                 label="Task Name"
                 value={taskName}
@@ -316,7 +333,7 @@ const styles = StyleSheet.create({
     padding: wp(2),
   },
   scrollView: {
-    maxHeight: MODAL_HEIGHT - hp(20) - Platform.select({ ios: 0, android: StatusBar.currentHeight || 0 }),
+    maxHeight: MODAL_HEIGHT - hp(20) - (Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0),
   },
   content: {
     padding: hp(3),
@@ -446,5 +463,11 @@ const styles = StyleSheet.create({
     paddingTop: hp(1.5),
     borderTopWidth: 1,
     borderTopColor: theme.colors.gray + '20',
+  },
+  errorText: {
+    color: theme.colors.error,
+    fontSize: hp(1.6),
+    marginBottom: hp(2),
+    textAlign: 'center',
   },
 }); 

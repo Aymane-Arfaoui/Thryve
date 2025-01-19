@@ -1,3 +1,4 @@
+from json import loads
 import string
 import pandas as pd
 
@@ -22,3 +23,11 @@ def read_gsheet(sheet_url : str) -> pd.DataFrame:
     )
 
     return pd.read_csv(download_url)
+
+
+def is_json_serializable(obj):
+    try:
+        loads(obj)
+        return True
+    except (TypeError, ValueError):
+        return False

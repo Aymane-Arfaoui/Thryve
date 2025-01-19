@@ -7,83 +7,102 @@ import { theme } from '../../constants/theme';
 import { hp, wp } from '../../helpers/common';
 import { HabitCard } from '../../components/HabitCard';
 import { format } from 'date-fns';
-
-// Updated dummy data with new structure
-const DUMMY_HABITS = [
-  {
-    id: '1',
-    name: "Do not drink alcohol",
-    frequency: {
-      type: 'daily',
-    },
-    reminders: {
-      enabled: true,
-      times: [
-        { day: 0, times: ['09:00'] },
-        { day: 1, times: ['09:00'] },
-        { day: 2, times: ['09:00'] },
-        { day: 3, times: ['09:00'] },
-        { day: 4, times: ['09:00'] },
-        { day: 5, times: ['09:00'] },
-        { day: 6, times: ['09:00'] },
-      ],
-    },
-    startDate: new Date(2024, 0, 1),
-    progress: {
-      '2024-01-15': { completed: true, timestamp: Date.now() },
-      '2024-01-16': { completed: true, timestamp: Date.now() },
-      '2024-01-17': { completed: true, timestamp: Date.now() },
-    },
-  },
-  // ... more dummy habits
-];
+import { AddHabitModal } from '../../components/AddHabitModal';
+import Toast from 'react-native-toast-message';
+import { useHabits } from '../../lib/firebase/hooks/useHabits';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 export default function HabitsScreen() {
   const router = useRouter();
-  const [habits, setHabits] = useState(DUMMY_HABITS);
+  const { habits, habitLogs, loading, addHabit, updateHabit, completeHabit, deleteHabit, updateHabitDays } = useHabits();
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [habitToEdit, setHabitToEdit] = useState(null);
 
-  const handleToggleDay = (habitId, dateStr) => {
-    const habit = habits.find(h => h.id === habitId);
-    const isCompleted = habit.progress[dateStr]?.completed;
-
-    if (isCompleted) {
-      Alert.alert(
-        "Mark Incomplete",
-        "Are you sure you want to mark this habit as incomplete?",
-        [
-          {
-            text: "Cancel",
-            style: "cancel"
-          },
-          {
-            text: "Yes",
-            onPress: () => updateHabitProgress(habitId, dateStr, false)
-          }
-        ]
-      );
-    } else {
-      updateHabitProgress(habitId, dateStr, true);
+  const handleToggleDay = async (habitId: string, dateStr: string) => {
+    try {
+      const result = await completeHabit(habitId, dateStr);
+      
+      if (result.completed) {
+        Toast.show({
+          type: 'success',
+          text1: 'Habit completed!',
+          text2: result.isNewRecord 
+            ? `New record! ${result.newStreak} day streak! 🔥` 
+            : result.newStreak > 1 
+              ? `Keep it up! ${result.newStreak} day streak! 🔥`
+              : 'Keep going! Start your streak! 💪'
+        });
+      } else {
+        Toast.show({
+          type: 'info',
+          text1: 'Habit marked as incomplete',
+          text2: 'You can always complete it later'
+        });
+      }
+    } catch (error) {
+      if (error.message === 'Cannot complete habits for future dates') {
+        Toast.show({
+          type: 'error',
+          text1: 'Cannot complete future dates',
+          text2: 'You can only complete habits for today or past days'
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Failed to update habit',
+          text2: 'Please try again'
+        });
+      }
     }
   };
 
-  const updateHabitProgress = (habitId, dateStr, completed) => {
-    setHabits(currentHabits =>
-      currentHabits.map(habit => {
-        if (habit.id === habitId) {
-          return {
-            ...habit,
-            progress: {
-              ...habit.progress,
-              [dateStr]: {
-                completed,
-                timestamp: Date.now()
-              }
-            }
-          };
-        }
-        return habit;
-      })
-    );
+  const handleEdit = (habit) => {
+    setHabitToEdit(habit);
+    setIsAddModalVisible(true);
+  };
+
+  const handleDelete = (habitId) => {
+    try {
+      deleteHabit(habitId);
+      Toast.show({
+        type: 'success',
+        text1: 'Habit deleted successfully'
+      });
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to delete habit',
+        text2: error.message
+      });
+    }
+  };
+
+  const handleSaveHabit = async (habitData) => {
+    try {
+      if (habitData.id) {
+        // Editing existing habit
+        await updateHabit(habitData);
+        Toast.show({
+          type: 'success',
+          text1: 'Habit updated successfully'
+        });
+      } else {
+        // Creating new habit
+        await addHabit(habitData);
+        Toast.show({
+          type: 'success',
+          text1: 'Habit created successfully'
+        });
+      }
+      setIsAddModalVisible(false);
+      setHabitToEdit(null);
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to save habit',
+        text2: error.message
+      });
+    }
   };
 
   return (
@@ -104,21 +123,50 @@ export default function HabitsScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {habits.map(habit => (
-            <HabitCard
-              key={habit.id}
-              habit={habit}
-              onToggleDay={handleToggleDay}
-            />
-          ))}
+          {loading ? (
+            <LoadingSpinner />
+          ) : habits.length > 0 ? (
+            habits.map(habit => (
+              <HabitCard
+                key={habit.id}
+                habit={habit}
+                log={habitLogs.find(log => log.habitId === habit.id)}
+                onToggleDay={handleToggleDay}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            ))
+          ) : (
+            <View style={styles.emptyStateContainer}>
+              <MaterialIcons 
+                name="accessibility-new" 
+                size={48} 
+                color={theme.colors.gray + '80'}
+              />
+              <Text style={styles.emptyStateTitle}>No Habits Yet</Text>
+              <Text style={styles.emptyStateText}>
+                Start building better habits by adding your first one
+              </Text>
+            </View>
+          )}
         </ScrollView>
 
         <TouchableOpacity 
           style={styles.fab}
-          onPress={() => console.log('Add new habit')}
+          onPress={() => setIsAddModalVisible(true)}
         >
           <MaterialIcons name="add" size={24} color={theme.colors.white} />
         </TouchableOpacity>
+
+        <AddHabitModal
+          visible={isAddModalVisible}
+          onClose={() => {
+            setIsAddModalVisible(false);
+            setHabitToEdit(null);
+          }}
+          onSave={handleSaveHabit}
+          habitToEdit={habitToEdit}
+        />
       </View>
     </ScreenWrapper>
   );
@@ -152,14 +200,35 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    right: wp(4),
     bottom: hp(4),
-    width: wp(14),
-    height: wp(14),
-    borderRadius: wp(7),
-    backgroundColor: theme.colors.primary,
+    right: wp(4),
+    width: wp(15),
+    height: wp(15),
+    borderRadius: wp(7.5),
+    backgroundColor: theme.colors.orange,
     justifyContent: 'center',
     alignItems: 'center',
     ...theme.shadows.md,
+    elevation: 4,
+    shadowColor: theme.colors.orange,
+    shadowOpacity: 0.4,
+    transform: [{ scale: 1.02 }],
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyStateTitle: {
+    fontSize: hp(2.4),
+    fontWeight: theme.fonts.bold,
+    color: theme.colors.dark,
+    marginTop: hp(2),
+  },
+  emptyStateText: {
+    fontSize: hp(1.8),
+    color: theme.colors.gray,
+    textAlign: 'center',
+    padding: hp(2),
   },
 }); 
