@@ -5,17 +5,15 @@ import asyncio
 import json
 from config import ELEVENLABS_API_KEY
 from app.services.definitions.voiceinterface import StreamingVoiceInterface
-from enum import Enum
+from app.models.context import ConversationContext
+from app.models.bot import Voices
 
 ELEVENLABS_STREAM_URL = "wss://api.elevenlabs.io/v1/text-to-speech/{ELEVENLABS_VOICE_ID}/stream-input"
 
-class ElevenLabsVoices(Enum):
-    KAJEN = "47zW6C63rcp2Ui4o25NB"
-
 class ElevenLabsClient(StreamingVoiceInterface):
 
-    def __init__(self, voice_id: ElevenLabsVoices = ElevenLabsVoices.KAJEN):
-        self.voice_id = voice_id
+    def __init__(self, voice_id: Voices = Voices.KAJEN):
+        self.voice = voice_id
         self.stream_url = ELEVENLABS_STREAM_URL
         self.options = self._get_default_options()
         self.ws_connection : websockets.WebSocketClientProtocol = None
@@ -28,7 +26,7 @@ class ElevenLabsClient(StreamingVoiceInterface):
 
     async def start_connection(self):
         print("Starting ElevenLabs connection")
-        stream_url = self.stream_url.format(ELEVENLABS_VOICE_ID=self.voice_id.value) + "?" + "&".join([f"{key}={value}" for key, value in self.options.items()])
+        stream_url = self.stream_url.format(ELEVENLABS_VOICE_ID=self.voice.value) + "?" + "&".join([f"{key}={value}" for key, value in self.options.items()])
         async with websockets.connect(stream_url) as ws:
             self.ws_connection = ws
             self.started = True
@@ -95,8 +93,8 @@ class ElevenLabsClient(StreamingVoiceInterface):
         await self.send_audio_request("", flush=True)
         # await self.send_audio_request("", flush=True)
 
-    async def initialize_from_start_data(self, data : dict):
-        self.voice_id = ElevenLabsVoices.KAJEN
+    async def initialize_from_start_data(self, conversation_context : ConversationContext):
+        self.voice = conversation_context.bot.voice
 
     @staticmethod
     def _get_default_options():

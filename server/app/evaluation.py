@@ -1,4 +1,16 @@
 import re
+import firebase_db
+from app.services.ext.azure_ai import get_llm
+from config import AzureModels
+
+def openai_call(prompt: str):
+    llm = get_llm(AzureModels.gpt_4o)
+    response = llm.invoke(prompt)
+    return response
+
+print(openai_call("How is your day going?"))
+
+
 
 def setup_evaluation(transcript: str):
     # Extract goals
@@ -53,8 +65,30 @@ Call Time: 13:00"""
 
 
 
+
+# Function to create a user
+def create_user(transcript: str, user_id: str):
+    # Extract goals and actions
+    goals_and_actions = extract_goals_and_actions(transcript)
+
+    # Get long term goals
+    ltg_1 = goals_and_actions['goal1']
+    ltg_2 = goals_and_actions['goal2']
+
+    # Shorten long term goals to 2 words
+    ltg_1, ltg_2 = extract_action_name(ltg_1, ltg_2)
+
+    # Create a user in the database
+    firebase_db.create_user(user_id, ltg_1, ltg_2)
+
+
+
+
+
+
+
 # sample_response = """Goal 1: Get in better shape (lose weight, build muscle, and improve overall health)
-# Goal 2: Quit vaping
+# Goal 2: Try to quit vaping
 
 # Daily Action 1: Go to the gym every day
 # Daily Action 2: Stay occupied during morning cravings"""
