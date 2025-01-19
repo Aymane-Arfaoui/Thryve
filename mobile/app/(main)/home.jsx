@@ -339,36 +339,8 @@ export default function HomeScreen() {
               onPress={() => router.push('/(main)/habits')}
             />
 
-            <View style={styles.dashboardCard}>
-              <Text style={styles.cardTitle}>Your Progress</Text>
-              <View style={styles.chartContainer}>
-                <ProgressChart
-                  data={progressData}
-                  width={chartWidth}
-                  height={hp(20)}
-                  strokeWidth={16}
-                  radius={32}
-                  chartConfig={chartConfig}
-                  hideLegend={false}
-                  style={styles.chart}
-                />
-              </View>
-              
-              <View style={styles.statsContainer}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>85%</Text>
-                  <Text style={styles.statLabel}>Daily Goal</Text>
-                </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>24</Text>
-                  <Text style={styles.statLabel}>Calls Made</Text>
-                </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>4.8</Text>
-                  <Text style={styles.statLabel}>Avg. Rating</Text>
-                </View>
-              </View>
-            </View>
+            {/* Add padding at the bottom to prevent overlap with button */}
+            <View style={{ height: hp(10) }} />
           </ScrollView>
         </View>
       </GestureHandlerRootView>
@@ -419,7 +391,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: wp(5),
     paddingTop: hp(4),
-    paddingBottom: hp(2), // Add some padding at the bottom
+    paddingBottom: hp(12), // Increased to prevent overlap with bottom button
   },
   infoCard: {
     backgroundColor: theme.colors.white,
@@ -685,20 +657,21 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
     borderTopWidth: 1,
     borderTopColor: theme.colors.gray + '20',
-    elevation: 5,
+    elevation: 8,
     shadowColor: theme.colors.dark,
-    shadowOffset: { width: 0, height: -4 },
+    shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    zIndex: 1000,
   },
   bottomButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4338ca', // Indigo-600 to match scoreCard
+    justifyContent: 'center',
+    backgroundColor: '#4338ca',
     paddingHorizontal: wp(4),
     paddingVertical: hp(1.5),
     borderRadius: theme.radius.full,
-    marginTop: hp(1),
     gap: wp(2),
     shadowColor: theme.colors.dark,
     shadowOffset: { width: 0, height: 2 },
