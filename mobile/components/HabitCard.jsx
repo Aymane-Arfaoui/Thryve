@@ -75,19 +75,28 @@ function calculateStreak(progress, frequency) {
   return currentStreak;
 }
 
-function calculateCompletion(progress) {
+function calculateCompletion(progress, frequency) {
   const today = new Date();
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
   let completed = 0;
   let total = 0;
 
+  const isDateInFrequency = (date) => {
+    const dayId = format(date, 'eee').toLowerCase();
+    return frequency.type === 'daily' || 
+           (frequency.type === 'weekly' && frequency.days.includes(dayId));
+  };
+
   for (let i = 0; i < 7; i++) {
     const date = addDays(weekStart, i);
     if (date > today) continue;
     
-    const dateStr = format(date, 'yyyy-MM-dd');
-    if (progress[dateStr]?.completed) completed++;
-    total++;
+    // Only count days that match the habit frequency
+    if (isDateInFrequency(date)) {
+      const dateStr = format(date, 'yyyy-MM-dd');
+      if (progress[dateStr]?.completed) completed++;
+      total++;
+    }
   }
 
   return total === 0 ? 0 : Math.round((completed / total) * 100);
@@ -95,7 +104,7 @@ function calculateCompletion(progress) {
 
 export function HabitCard({ habit, onToggleDay, onEdit, onDelete }) {
   const streak = calculateStreak(habit.progress, habit.frequency);
-  const completion = calculateCompletion(habit.progress);
+  const completion = calculateCompletion(habit.progress, habit.frequency);
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
   const [isAnalyticsVisible, setIsAnalyticsVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);

@@ -17,6 +17,7 @@ import { TaskModal } from '../../components/TaskModal';
 import { useTasks } from '../../lib/firebase/hooks/useTasks';
 import { useGoals } from '../../lib/firebase/hooks/useGoals';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { HabitsDashboardCard } from '../../components/HabitsDashboardCard';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -334,22 +335,9 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            <View style={styles.dashboardCard}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>Habits</Text>
-                <TouchableOpacity 
-                  onPress={() => router.push('/(main)/habits')}
-                  style={styles.viewAllButton}
-                >
-                  <Text style={styles.viewAllText}>View All</Text>
-                  <MaterialIcons name="arrow-forward" size={16} color={theme.colors.button} />
-                </TouchableOpacity>
-              </View>
-              
-              <Text style={styles.habitSubtext}>
-                Track your daily habits and build consistency
-              </Text>
-            </View>
+            <HabitsDashboardCard 
+              onPress={() => router.push('/(main)/habits')}
+            />
 
             <View style={styles.dashboardCard}>
               <Text style={styles.cardTitle}>Your Progress</Text>
