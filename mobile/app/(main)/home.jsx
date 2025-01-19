@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, ScrollView, Platform, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, ScrollView, Platform, Modal, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import BackButton from '../../components/BackButton';
 import ScreenWrapper from '../../components/ScreenWrapper';
@@ -14,7 +14,10 @@ import { TaskItem } from '../../components/TaskItem';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { MaterialIcons } from '@expo/vector-icons';
 import { TaskModal } from '../../components/TaskModal';
-import { useUserScore } from '../../lib/firebase/hooks/useUserScore';
+import { useTasks } from '../../lib/firebase/hooks/useTasks';
+import { useGoals } from '../../lib/firebase/hooks/useGoals';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { HabitsDashboardCard } from '../../components/HabitsDashboardCard';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -22,23 +25,50 @@ export default function HomeScreen() {
   const { score, loading: scoreLoading } = useUserScore();
   const [userData, setUserData] = useState(null);
   const [isTaskModalVisible, setIsTaskModalVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const { activeTasks, loading: tasksLoading, addTask, completeTask, getDashboardTasks, deleteTask, refreshTasks } = useTasks();
+  const { goals, loading: goalsLoading, completeGoal } = useGoals();
 
-  console.log('Auth Context:', { 
-    user, 
-    userId: user?.sub || user?.id,
-    hasUser: !!user 
-  });
+  const fetchUserData = async () => {
+    if (user?.id) {
+      const response = await getUserData(user.id);
+      if (response.success) {
+        setUserData(response.data);
+      }
+    }
+  };
+
+  const handleTestCall = async () => {
+    try {
+      console.log('Current userData:', userData);
+
+      if (!userData?.id) {
+        console.error('No user ID found in userData');
+        Alert.alert('Error', 'User data not found');
+        return;
+      }
+
+      console.log('Initiating call with userData:', {
+        userId: userData.id,
+        userData: userData
+      });
+
+      const result = await initiateCall(userData.id, "day_call_bot");
+
+      if (result.success) {
+        console.log('Call initiated successfully:', result.data);
+        Alert.alert('Success', 'Call initiated!');
+      } else {
+        console.error('Failed to initiate call:', result.msg);
+        Alert.alert('Error', 'Failed to start call');
+      }
+    } catch (error) {
+      console.error('Error in handleTestCall:', error);
+      Alert.alert('Error', 'Something went wrong');
+    }
+  };
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (user?.id) {
-        const response = await getUserData(user.id);
-        if (response.success) {
-          setUserData(response.data);
-        }
-      }
-    };
-
     fetchUserData();
   }, [user]);
 
