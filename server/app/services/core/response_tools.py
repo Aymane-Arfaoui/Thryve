@@ -206,6 +206,3 @@ async def get_response_sentences(
     except Exception as e:
         print("Error: ", e)
         raise e
-
-
-get_prompt_template("Be nice to the user {context}", "")
