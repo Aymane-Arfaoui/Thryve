@@ -9,9 +9,11 @@ import { hp, wp } from '../helpers/common';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { theme } from '../constants/theme';
 import { supabase } from '../lib/supabase';
+import { useFirebaseUser } from '../lib/firebase/hooks/useFirebaseUser';
 
 export default function SignUpScreen() {
   const router = useRouter();
+  const { createUserDocument } = useFirebaseUser();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -59,7 +61,7 @@ export default function SignUpScreen() {
     setLoading(true);
     try {
       const formattedPhone = `+1${phone.replace(/\D/g, '')}`;
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -75,6 +77,15 @@ export default function SignUpScreen() {
       if (error) {
         Alert.alert('Error', error.message);
         return;
+      }
+
+      // Create Firebase user document
+      const firebaseSuccess = await createUserDocument(data.user.id);
+      if (!firebaseSuccess) {
+        Alert.alert(
+          'Warning', 
+          'Account created but there was an issue setting up your profile. Please contact support.'
+        );
       }
 
       router.push('/login');

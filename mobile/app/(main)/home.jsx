@@ -210,10 +210,13 @@ export default function HomeScreen() {
                 {tasks.map(task => (
                   <TaskItem
                     key={task.id}
-                    name={task.name}
-                    timeInfo={task.dueDate}
-                    timeLabel="Due"
-                    onComplete={() => handleCompleteTask(task.id, 'task')}
+                    task={{
+                      id: task.id.toString(),
+                      name: task.name,
+                      dueDate: task.dueDate,
+                      priority: 'Due',
+                      completed: false
+                    }}
                   />
                 ))}
               </View>
@@ -229,10 +232,13 @@ export default function HomeScreen() {
                 {goals.map(goal => (
                   <TaskItem
                     key={goal.id}
-                    name={goal.name}
-                    timeInfo={goal.duration}
-                    timeLabel="Duration"
-                    onComplete={() => handleCompleteTask(goal.id, 'goal')}
+                    task={{
+                      id: goal.id.toString(),
+                      name: goal.name,
+                      dueDate: goal.duration,
+                      priority: 'Duration',
+                      completed: false
+                    }}
                   />
                 ))}
               </View>

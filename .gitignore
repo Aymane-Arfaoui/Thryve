@@ -6,3 +6,4 @@
 **/__pycache__/
 .vscode/
 /server/.env
+/server/app/firebase_creds.json

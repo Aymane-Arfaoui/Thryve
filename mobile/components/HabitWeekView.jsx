@@ -23,12 +23,6 @@ export function HabitWeekView({ habit, onToggleDay }) {
     );
   };
 
-  const isDateSelectable = (date) => {
-    const dayId = format(date, 'eee').toLowerCase();
-    return habit.frequency.type === 'daily' || 
-           (habit.frequency.type === 'weekly' && habit.frequency.days.includes(dayId));
-  };
-
   return (
     <View style={styles.container}>
       <View style={styles.weekHeader}>
@@ -54,34 +48,30 @@ export function HabitWeekView({ habit, onToggleDay }) {
           const isCompleted = habit.progress[dateStr]?.completed;
           const isPast = date <= new Date();
           const isCurrentDay = isToday(date);
-          const isSelectable = isDateSelectable(date);
 
           return (
             <TouchableOpacity
               key={dateStr}
               style={[
                 styles.dayButton,
-                !isPast && styles.futureDay,
-                isCurrentDay && !isCompleted && styles.currentDay,
+                isCurrentDay && styles.currentDay,
                 isCompleted && styles.completedDay,
-                !isSelectable && styles.unselectedDay,
+                !isPast && styles.futureDay,
               ]}
-              onPress={() => isPast && isSelectable && handlePress(date)}
-              disabled={!isPast || !isSelectable}
+              onPress={() => isPast && handlePress(date)}
+              disabled={!isPast}
             >
               <Text style={[
                 styles.dayLabel,
-                isCurrentDay && !isCompleted && styles.currentDayText,
+                isCurrentDay && styles.currentDayText,
                 isCompleted && styles.completedText,
-                !isSelectable && styles.unselectedText,
               ]}>
                 {format(date, 'EEE')[0]}
               </Text>
               <Text style={[
                 styles.dateLabel,
-                isCurrentDay && !isCompleted && styles.currentDayText,
+                isCurrentDay && styles.currentDayText,
                 isCompleted && styles.completedText,
-                !isSelectable && styles.unselectedText,
               ]}>
                 {format(date, 'd')}
               </Text>
@@ -166,13 +156,5 @@ const styles = StyleSheet.create({
   currentDayText: {
     color: theme.colors.dark,
     fontWeight: theme.fonts.bold,
-  },
-  unselectedDay: {
-    opacity: 0.3,
-    backgroundColor: theme.colors.gray + '20',
-    borderColor: theme.colors.gray + '20',
-  },
-  unselectedText: {
-    color: theme.colors.textLight,
   },
 }); 
