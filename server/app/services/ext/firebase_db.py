@@ -2,6 +2,8 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from firebase_admin import storage
 import json
+import time
+import datetime
 
 cred = credentials.Certificate("app/firebase_creds.json")
 firebase_admin.initialize_app(cred)
@@ -66,6 +68,71 @@ def get_long_term_goals(user_id: str):
     return doc.to_dict()["long_term_goals"]
 
 # long_term_goals = get_long_term_goals("example_user_id")
+
+
+
+# Get all habits names and descriptions
+def get_habits_names(user_id: str):
+    db = firestore.client()
+    collection_name = "user_goals"
+    doc_ref = db.collection(collection_name).document(user_id)
+    doc = doc_ref.get()
+    list_of_habits = doc.to_dict()["habits"]
+    return [{"name": habit["name"], "description": habit.get("description", "")} for habit in list_of_habits]
+
+# print(get_habits_names("8dc48926-c159-400d-b229-4fc02021625f"))
+# [{'name': 'Yo', 'description': ''}, {'name': 'Go gym', 'description': ''}, {'name': 'Go gym', 'description': ''}, {'name': 'Job', 'description': ''}, {'name': 'Morning Workout', 'description': ''}, {'name': 'Night Workout', 'description': 'This is a habit description'}]
+
+
+def add_habit(user_id: str, habit_name: str, description: str, frequency_type: str = "daily", frequency_days: list = None):
+    db = firestore.client()
+    collection_name = "user_goals"
+    doc_ref = db.collection(collection_name).document(user_id)
+    
+    doc = doc_ref.get()
+    if doc.exists:
+        data = doc.to_dict()
+    else:
+        data = {}
+
+    # Build the new habit object
+    new_habit = {
+        "id": str(int(time.time())),
+        "name": habit_name,
+        "frequency": {
+            "type": frequency_type,
+            "days": frequency_days if frequency_days else []
+        },
+        "progress": {},
+        "currentStreak": 0,
+        "longestStreak": 0,
+        "createdAt": datetime.datetime.utcnow(),
+        "description": description
+    }
+
+    # Append to existing habits or create a new list
+    if "habits" in data and isinstance(data["habits"], list):
+        data["habits"].append(new_habit)
+    else:
+        data["habits"] = [new_habit]
+
+    # Update/set the document
+    doc_ref.set(data, merge=True)
+
+    return f"Habit '{habit_name}' added successfully for user_id '{user_id}' in '{collection_name}' collection."
+
+
+# USER_ID = "8dc48926-c159-400d-b229-4fc02021625f"
+# HABIT_NAME = "Night Workout"
+# FREQUENCY_TYPE = "weekly"
+# FREQUENCY_DAYS = ["mon", "wed", "fri"]
+# DESCRIPTION = "This is a habit description"
+
+# response = add_habit(USER_ID, HABIT_NAME, FREQUENCY_TYPE, FREQUENCY_DAYS)
+# print(response)
+
+
+
 
 
 # Function to add a daily action to a user
