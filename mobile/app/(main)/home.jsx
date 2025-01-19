@@ -18,6 +18,7 @@ import { useTasks } from '../../lib/firebase/hooks/useTasks';
 import { useGoals } from '../../lib/firebase/hooks/useGoals';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { HabitsDashboardCard } from '../../components/HabitsDashboardCard';
+import { useUserScore } from '../../lib/firebase/hooks/useUserScore';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -40,21 +41,23 @@ export default function HomeScreen() {
 
   const handleTestCall = async () => {
     try {
-      console.log('Current userData:', userData);
-
-      if (!userData?.id) {
-        console.error('No user ID found in userData');
-        Alert.alert('Error', 'User data not found');
+      // Get userId from both possible sources
+      const userId = user?.sub || user?.id;
+      console.log('Starting call process for user:', userId);
+      
+      if (!userId) {
+        console.error('No user ID found', { user });
+        Alert.alert('Error', 'User not found');
         return;
       }
 
-      console.log('Initiating call with userData:', {
-        userId: userData.id,
+      console.log('Initiating call with user data:', {
+        userId,
         userData: userData
       });
 
-      const result = await initiateCall(userData.id, "day_call_bot");
-
+      const result = await initiateCall(userId);
+      
       if (result.success) {
         console.log('Call initiated successfully:', result.data);
         Alert.alert('Success', 'Call initiated!');
@@ -63,7 +66,7 @@ export default function HomeScreen() {
         Alert.alert('Error', 'Failed to start call');
       }
     } catch (error) {
-      console.error('Error in handleTestCall:', error);
+      console.error('Error making call:', error);
       Alert.alert('Error', 'Something went wrong');
     }
   };
@@ -116,11 +119,6 @@ export default function HomeScreen() {
     { id: 2, name: "Buy groceries", dueDate: "2025-01-20" }
   ];
 
-  const goals = [
-    { id: 1, name: "Start a workout routine", duration: "3 months" },
-    { id: 2, name: "Learn a new language", duration: "6 months" }
-  ];
-
   const handleCompleteTask = (taskId, type) => {
     console.log(`Completing ${type}-term task ${taskId}`);
     // Implement task completion logic here
@@ -130,38 +128,6 @@ export default function HomeScreen() {
     console.log('New task:', task);
     // Here you would typically save the task to your backend
     // For now, we can just log it
-  };
-
-  const handleTestCall = async () => {
-    try {
-      // Get userId from both possible sources
-      const userId = user?.sub || user?.id;
-      console.log('Starting call process for user:', userId);
-      
-      if (!userId) {
-        console.error('No user ID found', { user });
-        Alert.alert('Error', 'User not found');
-        return;
-      }
-
-      console.log('Initiating call with user data:', {
-        userId,
-        userData: userData
-      });
-
-      const result = await initiateCall(userId);
-      
-      if (result.success) {
-        console.log('Call initiated successfully:', result.data);
-        Alert.alert('Success', 'Call initiated!');
-      } else {
-        console.error('Failed to initiate call:', result.msg);
-        Alert.alert('Error', 'Failed to start call');
-      }
-    } catch (error) {
-      console.error('Error making call:', error);
-      Alert.alert('Error', 'Something went wrong');
-    }
   };
 
   return (
@@ -269,7 +235,7 @@ export default function HomeScreen() {
                     name={goal.name}
                     timeInfo={goal.duration}
                     timeLabel="Duration"
-                    onComplete={() => handleCompleteTask(goal.id, 'goal')}
+                    onComplete={() => completeGoal(goal.id)}
                   />
                 ))}
               </View>
@@ -372,7 +338,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: wp(5),
     paddingTop: hp(4),
-    paddingBottom: hp(2), // Add some padding at the bottom
+    paddingBottom: Platform.OS === 'ios' ? hp(16) : hp(14), // Increased padding to prevent overlap
   },
   infoCard: {
     backgroundColor: theme.colors.white,
@@ -597,6 +563,14 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
     borderTopWidth: 1,
     borderTopColor: theme.colors.gray + '20',
+    elevation: 5, // Add elevation for Android
+    shadowColor: theme.colors.dark, // Add shadow for iOS
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
   bottomButton: {
     backgroundColor: '#4338ca',
