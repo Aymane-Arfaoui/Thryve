@@ -5,19 +5,19 @@ RED='\033[0;31m'
 NC='\033[0m' 
 LOGLEVEL="INFO"
 
-# Set Python path equivalent to VSCode's ${workspaceFolder}/server
-export PYTHONPATH="$(pwd)/server"
+# Add the server directory to PYTHONPATH
+export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
 # Function to start worker
 start_worker() {
     echo -e "${GREEN}Starting Celery worker...${NC}"
-    celery -A scheduler.celery_app:celery_app worker --loglevel=$LOGLEVEL &
+    celery -A celery_app:celery_app worker --loglevel=$LOGLEVEL &
 }
 
 # Function to start beat
 start_beat() {
     echo -e "${GREEN}Starting Celery beat...${NC}"
-    celery -A scheduler.celery_app:celery_app beat --loglevel=$LOGLEVEL &
+    celery -A celery_app:celery_app beat --loglevel=$LOGLEVEL &
 }
 
 # Function to stop all celery processes

@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 import os
 from typing import NamedTuple, TypedDict
 
-
 load_dotenv()
 
 class AzureModels(Enum):
@@ -45,3 +44,7 @@ TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 
 CLOUDAMQP_APIKEY = os.getenv("CLOUDAMQP_APIKEY")   
 CLOUDAMQP_URL = os.getenv("CLOUDAMQP_URL")
+REDISCLOUD_URL = os.getenv("REDISCLOUD_URL")
+
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL")

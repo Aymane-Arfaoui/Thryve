@@ -24,7 +24,7 @@ class VoiceBot(Bot):
 
     def __post_init__(self):
         if self.id in self._voice_bots:
-            raise ValueError(f"VoiceBot with id {self.id} already exists")
+            return
         self._voice_bots[self.id] = self
 
     @classmethod

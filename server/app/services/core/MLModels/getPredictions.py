@@ -1,4 +1,4 @@
-from app.services.core.LogisticRegressionModel import GoalPredictionModel
+from app.services.core.MLModels.LogisticRegressionModel import GoalPredictionModel
 from aiohttp import web
 
 async def get_goal_prediction(request):

@@ -1,5 +1,5 @@
 import re
-import app.firebase_db as firebase_db
+import app.services.ext.firebase_db as firebase_db
 from app.services.ext.azure_ai import get_llm
 from config import AzureModels
 
