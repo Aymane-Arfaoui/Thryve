@@ -52,12 +52,14 @@ export function HabitAnalyticsModal({ visible, onClose, habit }) {
 
     // Analyze progress by day of week
     Object.entries(habit.progress || {}).forEach(([dateStr, data]) => {
-      const date = new Date(dateStr);
-      const day = format(date, 'eee').toLowerCase();
+      // Parse the date string directly and get the day
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const date = new Date(year, month - 1, day); // month is 0-based in JS
+      const dayName = format(date, 'eee').toLowerCase();
       
-      dayStats[day].total++;
+      dayStats[dayName].total++;
       if (data.completed) {
-        dayStats[day].completed++;
+        dayStats[dayName].completed++;
       }
     });
 
