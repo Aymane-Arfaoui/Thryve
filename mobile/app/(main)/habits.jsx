@@ -7,8 +7,6 @@ import { theme } from '../../constants/theme';
 import { hp, wp } from '../../helpers/common';
 import { HabitCard } from '../../components/HabitCard';
 import { format } from 'date-fns';
-import { AddHabitModal } from '../../components/AddHabitModal';
-import Toast from 'react-native-toast-message';
 
 // Updated dummy data with new structure
 const DUMMY_HABITS = [
@@ -43,8 +41,6 @@ const DUMMY_HABITS = [
 export default function HabitsScreen() {
   const router = useRouter();
   const [habits, setHabits] = useState(DUMMY_HABITS);
-  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const [habitToEdit, setHabitToEdit] = useState(null);
 
   const handleToggleDay = (habitId, dateStr) => {
     const habit = habits.find(h => h.id === habitId);
@@ -90,42 +86,6 @@ export default function HabitsScreen() {
     );
   };
 
-  const handleEdit = (habit) => {
-    setHabitToEdit(habit);
-    setIsAddModalVisible(true);
-  };
-
-  const handleDelete = (habitId) => {
-    setHabits(current => current.filter(h => h.id !== habitId));
-  };
-
-  const handleSaveHabit = (habitData) => {
-    if (habitData.id) {
-      // Editing existing habit
-      setHabits(current =>
-        current.map(habit =>
-          habit.id === habitData.id ? { ...habit, ...habitData } : habit
-        )
-      );
-      Toast.show({
-        type: 'success',
-        text1: 'Habit updated successfully'
-      });
-    } else {
-      // Creating new habit
-      setHabits(current => [...current, {
-        ...habitData,
-        id: Date.now().toString(),
-      }]);
-      Toast.show({
-        type: 'success',
-        text1: 'Habit created successfully'
-      });
-    }
-    setIsAddModalVisible(false);
-    setHabitToEdit(null);
-  };
-
   return (
     <ScreenWrapper>
       <View style={styles.container}>
@@ -149,28 +109,16 @@ export default function HabitsScreen() {
               key={habit.id}
               habit={habit}
               onToggleDay={handleToggleDay}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
             />
           ))}
         </ScrollView>
 
         <TouchableOpacity 
           style={styles.fab}
-          onPress={() => setIsAddModalVisible(true)}
+          onPress={() => console.log('Add new habit')}
         >
           <MaterialIcons name="add" size={24} color={theme.colors.white} />
         </TouchableOpacity>
-
-        <AddHabitModal
-          visible={isAddModalVisible}
-          onClose={() => {
-            setIsAddModalVisible(false);
-            setHabitToEdit(null);
-          }}
-          onSave={handleSaveHabit}
-          habitToEdit={habitToEdit}
-        />
       </View>
     </ScreenWrapper>
   );
@@ -204,18 +152,14 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: hp(4),
     right: wp(4),
-    width: wp(15),
-    height: wp(15),
-    borderRadius: wp(7.5),
-    backgroundColor: theme.colors.orange,
+    bottom: hp(4),
+    width: wp(14),
+    height: wp(14),
+    borderRadius: wp(7),
+    backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     ...theme.shadows.md,
-    elevation: 4,
-    shadowColor: theme.colors.orange,
-    shadowOpacity: 0.4,
-    transform: [{ scale: 1.02 }],
   },
 }); 
