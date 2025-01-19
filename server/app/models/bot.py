@@ -59,11 +59,13 @@ class VoiceBotBuilder(BotBuilder):
         return self
     
     def load_prompts(self):
-        with open(f"resources/prompts/{self.id}.txt", "r") as f:
+        with open(f"resources/prompts/{self.id}/main.txt", "r") as f:
             self.sys_prompt = f.read()
         
     def build(self):
         return VoiceBot(id=self.id, knowledge_base=self.knowledge_base, sys_prompt=self.sys_prompt, leading_prompt=self.leading_prompt, voice=self.voice)
+
+
 
 
 
