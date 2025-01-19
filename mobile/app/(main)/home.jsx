@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, ScrollView, Platform, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, ScrollView, Platform, Modal, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import BackButton from '../../components/BackButton';
 import ScreenWrapper from '../../components/ScreenWrapper';
@@ -14,23 +14,27 @@ import { TaskItem } from '../../components/TaskItem';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { MaterialIcons } from '@expo/vector-icons';
 import { TaskModal } from '../../components/TaskModal';
+import { useTasks } from '../../lib/firebase/hooks/useTasks';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const [userData, setUserData] = useState(null);
   const [isTaskModalVisible, setIsTaskModalVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const { activeTasks, loading: tasksLoading, addTask, completeTask, getDashboardTasks, deleteTask, refreshTasks } = useTasks();
+
+  const fetchUserData = async () => {
+    if (user?.id) {
+      const response = await getUserData(user.id);
+      if (response.success) {
+        setUserData(response.data);
+      }
+    }
+  };
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (user?.id) {
-        const response = await getUserData(user.id);
-        if (response.success) {
-          setUserData(response.data);
-        }
-      }
-    };
-
     fetchUserData();
   }, [user]);
 
@@ -73,26 +77,35 @@ export default function HomeScreen() {
   };
 
   // Update the dummy data naming
-  const tasks = [
-    { id: 1, name: "Finish assignment", dueDate: "2025-01-22" },
-    { id: 2, name: "Buy groceries", dueDate: "2025-01-20" }
-  ];
-
   const goals = [
     { id: 1, name: "Start a workout routine", duration: "3 months" },
     { id: 2, name: "Learn a new language", duration: "6 months" }
   ];
 
-  const handleCompleteTask = (taskId, type) => {
-    console.log(`Completing ${type}-term task ${taskId}`);
-    // Implement task completion logic here
+  const handleSaveTask = (task) => {
+    console.log('Saving task:', task);
+    addTask({
+      name: task.name,
+      dueDate: task.dueDate.toISOString(),
+      priority: task.priority,
+    });
+    setIsTaskModalVisible(false);
   };
 
-  const handleSaveTask = (task) => {
-    console.log('New task:', task);
-    // Here you would typically save the task to your backend
-    // For now, we can just log it
-  };
+  console.log('Active Tasks:', activeTasks);
+  console.log('Dashboard Tasks:', getDashboardTasks());
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchUserData();
+      await refreshTasks();
+      setRefreshing(false);
+    } catch (error) {
+      console.error('Error refreshing:', error);
+      setRefreshing(false);
+    }
+  }, [user, fetchUserData, refreshTasks]);
 
   return (
     <ScreenWrapper>
@@ -115,6 +128,14 @@ export default function HomeScreen() {
             style={styles.scrollView}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={theme.colors.primary}
+                colors={[theme.colors.primary]}
+              />
+            }
           >
             <View style={styles.scoreCardContainer}>
               <View style={[styles.scoreCard, { backgroundColor: '#4338ca' }]}>
@@ -166,18 +187,49 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                 </View>
                 
-                {tasks.map(task => (
-                  <TaskItem
-                    key={task.id}
-                    task={{
-                      id: task.id.toString(),
-                      name: task.name,
-                      dueDate: task.dueDate,
-                      priority: 'Due',
-                      completed: false
-                    }}
-                  />
-                ))}
+                {!user || tasksLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <View>
+                    {Array.isArray(getDashboardTasks()) && getDashboardTasks().length > 0 ? (
+                      getDashboardTasks()
+                        .filter(task => task && typeof task === 'object')
+                        .map(task => (
+                          <TaskItem
+                            key={task.id}
+                            task={{
+                              id: task.id?.toString() || '',
+                              name: task.name?.toString() || '',
+                              dueDate: task.dueDate?.toString() || '',
+                              priority: task.priority?.toString() || '',
+                              completed: Boolean(task.completed)
+                            }}
+                            onComplete={() => completeTask(task.id)}
+                            onDelete={() => deleteTask(task.id)}
+                          />
+                        ))
+                    ) : (
+                      <View style={styles.emptyStateContainer}>
+                        <MaterialIcons 
+                          name="assignment" 
+                          size={48} 
+                          color={theme.colors.gray + '80'}
+                        />
+                        <Text style={styles.emptyStateTitle}>No Upcoming Tasks</Text>
+                        <Text style={styles.emptyStateText}>
+                          Start by adding your first task to stay organized
+                        </Text>
+                        <TouchableOpacity 
+                          style={styles.addTaskButton}
+                          onPress={() => setIsTaskModalVisible(true)}
+                        >
+                          <MaterialIcons name="add" size={20} color={theme.colors.white} />
+                          <Text style={styles.addTaskButtonText}>Add New Task</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                )}
               </View>
 
               <View style={styles.tasksList}>
@@ -489,5 +541,38 @@ const styles = StyleSheet.create({
     fontSize: hp(1.6),
     color: theme.colors.textLight,
     marginTop: hp(1),
+  },
+  emptyStateContainer: {
+    alignItems: 'center',
+    padding: hp(4),
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radius.lg,
+    gap: hp(1.5),
+  },
+  emptyStateTitle: {
+    fontSize: hp(2),
+    fontWeight: theme.fonts.bold,
+    color: theme.colors.dark,
+    marginTop: hp(1),
+  },
+  emptyStateText: {
+    fontSize: hp(1.6),
+    color: theme.colors.textLight,
+    textAlign: 'center',
+  },
+  addTaskButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.button,
+    paddingHorizontal: wp(4),
+    paddingVertical: hp(1.5),
+    borderRadius: theme.radius.full,
+    marginTop: hp(2),
+    gap: wp(2),
+  },
+  addTaskButtonText: {
+    color: theme.colors.white,
+    fontSize: hp(1.6),
+    fontWeight: theme.fonts.medium,
   },
 });
