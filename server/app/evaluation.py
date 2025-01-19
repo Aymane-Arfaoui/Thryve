@@ -3,13 +3,11 @@ import firebase_db
 from app.services.ext.azure_ai import get_llm
 from config import AzureModels
 
+
 def openai_call(prompt: str):
     llm = get_llm(AzureModels.gpt_4o)
     response = llm.invoke(prompt)
-    return response
-
-print(openai_call("How is your day going?"))
-
+    return response.content.strip()
 
 
 def setup_evaluation(transcript: str):
@@ -26,7 +24,8 @@ Goal 2: [goal 2]
 Daily Action 1: [daily action 1]
 Daily Action 2: [daily action 2]"""
     
-    return prompt
+    ai_response = openai_call(prompt)
+    return ai_response
 
 
 def extract_goals_and_actions(response: str):
@@ -40,16 +39,13 @@ def extract_goals_and_actions(response: str):
     return goals_and_actions
 
 
-def extract_action_name(transcript: str):
-    prompt = f"""From the following transcript, extract the name of the 2 habits the user wants to follow or stay away from each day.
-{transcript}
-
-Extract the name of the action in the following format and keep in less than 2 words. For example if the user says they want to drink water everyday the action name is "Water" or if they said they want to quit vaping the action name is "Vaping":
-
-Action 1: [action name]
-Action 2: [action name]"""
+def extract_action_name(action_description: str):
+    prompt = f"""From the action description below shorten it into a title that I can display in an app that encaspulates the action.Extract the name of the action in the following format and keep in less than 2 words. For example if the user says they want to drink water everyday the action name is "Water" or if they said they want to quit vaping the action name is "Vaping":
+Action Description: {action_description}
+Action Title:"""
     
-    return prompt
+    ai_response = openai_call(prompt)
+    return ai_response
 
 
 def call_time_extractor(transcript: str):
@@ -63,45 +59,40 @@ Call Time: 13:00"""
     return prompt
 
 
-
-
-
 # Function to create a user
 def create_user(transcript: str, user_id: str):
     # Extract goals and actions
-    goals_and_actions = extract_goals_and_actions(transcript)
+    goals_ai_extraction = setup_evaluation(transcript)
+    goals_and_actions = extract_goals_and_actions(goals_ai_extraction)
 
-    # Get long term goals
-    ltg_1 = goals_and_actions['goal1']
-    ltg_2 = goals_and_actions['goal2']
+    # Get long term goals and action descriptions
+    ltg_1_description = goals_and_actions['goal1']
+    ltg_2_description = goals_and_actions['goal2']
+
+    action_1_description = goals_and_actions['action1']
+    action_2_description = goals_and_actions['action2']
 
     # Shorten long term goals to 2 words
-    ltg_1, ltg_2 = extract_action_name(ltg_1, ltg_2)
+    action_title_1 = extract_action_name(action_1_description).replace('"', '')
+    action_title_2 = extract_action_name(action_2_description).replace('"', '')
 
-    # Create a user in the database
-    firebase_db.create_user(user_id, ltg_1, ltg_2)
+    # Update long term goals
+    firebase_db.create_long_term_goals(user_id, ltg_1_description, ltg_2_description)
 
-
-
-
-
-
-
-# sample_response = """Goal 1: Get in better shape (lose weight, build muscle, and improve overall health)
-# Goal 2: Try to quit vaping
-
-# Daily Action 1: Go to the gym every day
-# Daily Action 2: Stay occupied during morning cravings"""
+    # Update daily actions
+    firebase_db.add_daily_action(user_id, action_title_1, action_1_description)
+    firebase_db.add_daily_action(user_id, action_title_2, action_2_description)
 
 
-# sample_transcript = """Coach: Hi Michael, I’m Goggins, your personal life coach. How’s it going?
-# User: I’m good, how are you?
 
-# Coach: I’m doing great, Michael. Thanks for asking! So, tell me, what’s going on in school for you these days?
+# sample_transcript = """Coach: Hi Michael, Im Goggins, your personal life coach. Hows it going?
+# User: Im good, how are you?
+
+# Coach: Im doing great, Michael. Thanks for asking! So, tell me, whats going on in school for you these days?
 # User: Nothing much, things are just really busy for me.
 
-# Coach: I hear you, Michael. Life can get overwhelming when things pile up. What’s keeping you the busiest right now? Are there any specific projects, assignments, or responsibilities taking up most of your time?
-# User: I’m just a bit behind in class, so I gotta keep up.
+# Coach: I hear you, Michael. Life can get overwhelming when things pile up. Whats keeping you the busiest right now? Are there any specific projects, assignments, or responsibilities taking up most of your time?
+# User: Im just a bit behind in class, so I gotta keep up.
 
 # Coach: Got it, Michael. Catching up can definitely feel like a grind, but it’s good that you’re aware of it and working on it. Outside of school, what do you like to do for fun to keep yourself balanced?
 # User: I like to play video games.
@@ -133,3 +124,12 @@ def create_user(transcript: str, user_id: str):
 # Coach: Alright, Michael, you’ve got a solid plan in place. Stick to it, and remember, small daily steps lead to big changes. I’ll be here if you ever need a push or some guidance. Let’s crush these goals together! Talk soon!
 # """
 
+
+
+
+
+# sample_response = """Goal 1: Get in better shape (lose weight, build muscle, and improve overall health)
+# Goal 2: Try to quit vaping
+
+# Daily Action 1: Go to the gym every day
+# Daily Action 2: Stay occupied during morning cravings"""
