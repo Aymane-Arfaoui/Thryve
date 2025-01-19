@@ -18,6 +18,7 @@ import { useTasks } from '../../lib/firebase/hooks/useTasks';
 import { useGoals } from '../../lib/firebase/hooks/useGoals';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { HabitsDashboardCard } from '../../components/HabitsDashboardCard';
+import { useUserScore } from '../../lib/firebase/hooks/useUserScore';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -27,6 +28,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const { activeTasks, loading: tasksLoading, addTask, completeTask, getDashboardTasks, deleteTask, refreshTasks } = useTasks();
   const { goals, loading: goalsLoading, completeGoal } = useGoals();
+  const { score, scoreHistory, loading: scoreLoading } = useUserScore();
 
   const fetchUserData = async () => {
     if (user?.id) {
@@ -177,11 +179,23 @@ export default function HomeScreen() {
                     <Text style={styles.scoreBadgeText}>This Week</Text>
                   </View>
                 </View>
-                <Text style={styles.scoreValue}>92</Text>
+                <Text style={styles.scoreValue}>
+                  {scoreLoading ? '...' : score}
+                </Text>
                 <View style={styles.scoreFooter}>
                   <View style={styles.scoreChange}>
-                    <Text style={styles.scoreChangeIcon}>↑</Text>
-                    <Text style={styles.scoreChangeText}>8% from last week</Text> 
+                    <Text style={styles.scoreChangeIcon}>
+                      {scoreHistory?.length > 1 && 
+                       scoreHistory[scoreHistory.length - 1]?.score > scoreHistory[scoreHistory.length - 2]?.score 
+                       ? '↑' : '↓'}
+                    </Text>
+                    <Text style={styles.scoreChangeText}>
+                      {scoreHistory?.length > 1 
+                        ? `${Math.abs(Math.round(((scoreHistory[scoreHistory.length - 1]?.score - 
+                            scoreHistory[scoreHistory.length - 2]?.score) / 
+                            scoreHistory[scoreHistory.length - 2]?.score) * 100))}% from last week`
+                        : 'No previous data'}
+                    </Text>
                   </View>
                   <TouchableOpacity style={styles.scoreDetailsButton}>
                     <Text style={styles.scoreDetailsText}>View Details</Text>
