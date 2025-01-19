@@ -9,7 +9,7 @@ from config import DEEPGRAM_API_KEY
 from abc import ABC
 from typing import NamedTuple
 from app.services.definitions.transcriptions import TranscriptionResult
-
+from app.models.context import ConversationContext
 
 DEEPGRAM_CLIENT = DeepgramClient(api_key=DEEPGRAM_API_KEY,
                                  )
@@ -49,7 +49,7 @@ class DeepgramTranscriptionService():
     async def send_audio(self, audio_data: bytes):
         await self.dg_connection.send(audio_data)
 
-    async def initialize_from_start_data(self, data : dict):
+    async def initialize_from_start_data(self, conversation_context : ConversationContext):
         pass   
 
     @staticmethod

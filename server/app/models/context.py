@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
-from app.services.core import response_generators as rg
-from langchain_core.messages import HumanMessage
+from app.services.core import response_tools as rg
+from app.models.bot import VoiceBot
 
 @dataclass
 class ConversationContext:
@@ -15,12 +15,4 @@ class ConversationContext:
     const_keyword_args : dict = field(default_factory=dict)
     call_state : dict = field(default_factory=dict)
     final_chat_history : rg.ChatMessageHistory = field(default_factory=rg.ChatMessageHistory)
-    
-    async def parse_twilio_start_data(self, data : dict):
-        self.call_id = data.get("callSid")
-        custom_params = data.get("customParameters", {})
-        
-        self.user_id = custom_params.pop("user_id")
-        self.const_keyword_args = custom_params
-
-        # ADD LOGIC TO LOAD PROMPTS HERE 
+    bot : VoiceBot = None

@@ -1,13 +1,14 @@
-from app.services.core import response_generators as rg
+from app.services.core import response_tools as rg
 from langchain_community.vectorstores import VectorStore
 from enum import Enum
 from app.services.definitions.call_elements import CallElement
 from langchain_community.vectorstores import FAISS
 import asyncio
-from app.services.core.response_generators import create_vector_store
+from app.services.core.response_tools import create_vector_store
 from langchain_core.documents import Document
 import json
 from typing import AsyncIterator
+from app.models.context import ConversationContext
 
 class ChatMessageTypes(Enum):
     HUMAN = "human"
@@ -20,9 +21,11 @@ class ResponseEngine(CallElement):
                  system_prompt : str = "",
                  leading_prompt : str = "",
                  ):
+        
         self.vector_store = vector_store
         self.system_prompt = system_prompt
         self.leading_prompt = leading_prompt
+
         self.prompt_template = None
         self.retrieval_chain = None
         self.chat_history = rg.ChatMessageHistory()
@@ -60,21 +63,13 @@ class ResponseEngine(CallElement):
             yield chunk.response
 
     # TODO: Add logic to load prompts from start data
-    async def initialize_from_start_data(self, data : dict):
-        self.vector_store = create_vector_store([Document(page_content="Hello")])
-        self.system_prompt = "Be nice to the user {context}"
-        self.leading_prompt = "You are a helpful assistant"
+    async def initialize_from_start_data(self, call_context : ConversationContext):
+        
+        self.vector_store = call_context.bot.knowledge_base
+        self.system_prompt = call_context.bot.sys_prompt
+        self.leading_prompt = call_context.bot.leading_prompt
+        
         self.initialize_defaults()
-
-response_engine = ResponseEngine()  
-
-async def main():
-    await response_engine.initialize_from_start_data({})
-    sentence_response_gen = response_engine.create_response_gen("Hello", **{"state" : json.dumps({})})
-    async for sentence in sentence_response_gen:
-        print(sentence)
-
-asyncio.run(main())
 
 
 
